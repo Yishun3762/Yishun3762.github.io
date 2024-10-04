@@ -1,43 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>My Personal Blog</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f0f0;
-      color: #333;
-    }
-    header {
-      background-color: #007bff;
-      padding: 20px;
-      text-align: center;
-      color: #fff;
-    }
-    main {
-      padding: 20px;
-    }
-    footer {
-      text-align: center;
-      padding: 10px;
-      background-color: #007bff;
-      color: #fff;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Asagi的后宫</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('屏幕截图 2024-09-27 202032.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+        }
+/* 工程制图就是个sb */
+        .sidebar {
+            width: 250px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9); 
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+        }
+
+        .profile-pic {
+            width: 150px;
+            height: 150px;
+            background-color: #ddd;
+            border-radius: 50%;
+            margin: 0 auto;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .bio {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .bio h2 {
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .bio p {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .nav {
+            margin-top: 30px;
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .nav li {
+            margin-bottom: 15px;
+        }
+
+        .nav a {
+            text-decoration: none;
+            font-size: 18px;
+            color: #333;
+            display: block;
+            padding: 10px;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .nav a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .content {
+            margin-left: 270px; /* 服了工程制图，就学一个学期的课还这么多事 */
+            padding: 40px;
+        }
+
+        h1 {
+            color: #4A90E2;
+            font-size: 36px;
+        }
+
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>My Personal Blog</h1>
-  </header>
-  <main>
-    <!-- Your blog posts will go here. Add your content later. -->
-  </main>
-  <footer>
-    &copy; 2023 YourName. All rights reserved.
-  </footer>
+    <div class="sidebar">
+        <div class="profile-pic" style="background-image: url('屏幕截图 2024-10-04 223712.png')"></div>
+
+        <div class="bio">
+            <h2>AsagiYuumoya</h2>
+            <p>人活着就是为了二次元！</p>
+        </div>
+
+        <ul class="nav">
+            <li><a href="#home">主页</a></li>
+            <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">关于</a></li>
+            <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+            <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+            <li><a href="https://ys.mihoyo.com/?utm_source=backup53&from_channel=backup53&msclkid=e8f7ba16ca881fde433adce935eef2f3#/">点我看小猫娘喵~</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <h1>Ciallo～(∠・ω< )⌒★</h1>
+        <p>欢迎你喵~这里已经好久没人来过了喵~咱喵好寂寞喵~</p>
+        <div>"这里除了小猫娘什么都没有喵"</div>
+        <h3>点左边的按钮看小猫娘喵~</h3>
+        <p>背景图很好看对吧，我也觉得</p>
+    </div>
 </body>
 </html>

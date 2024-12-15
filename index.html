@@ -351,6 +351,13 @@
 </div>
 
 <script>
+    const style = document.createElement('style');
+    style.textContent = `
+    .content p {
+        transition: opacity 0.5s ease;
+    }
+`;
+    document.head.appendChild(style);
     function togglePlayer() {
         const player = document.getElementById('musicPlayer');
         player.classList.toggle('minimized');
@@ -410,7 +417,12 @@
             }, 5000);
         }
     }
+    const backgroundTexts = [
+        "背景图很好看对吧喵，我也觉得喵，伊莉雅和美游真是太可爱了喵",
+        "生气了喵"
+    ];
 
+    // 随机文本
     function getRandomText() {
         if (randomTexts.length === 0) return "这里除了小猫娘什么都没有喵";
 
@@ -424,7 +436,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', loadTexts);
-
+    //换
     document.getElementById('random-text').addEventListener('click', function() {
         const textBox = this;
         textBox.classList.add('text-change');
@@ -437,7 +449,7 @@
             textBox.classList.remove('text-change');
         }, 500);
     });
-
+    //换背景图
     document.getElementById('change-bgpic').addEventListener('click', function() {
         Count++;
         if (Count <= 3) {
@@ -454,6 +466,14 @@
             alert('哼，咱喵去找主人AsagiYuumoya了喵~');
             currentIndex = (currentIndex + 1) % images.length;
             document.body.style.backgroundImage = `url('${images[currentIndex]}')`;
+            const textElement = document.querySelector('.content p:nth-of-type(2)');
+            textElement.style.opacity = '0';
+
+            setTimeout(() => {
+                textElement.textContent = backgroundTexts[1];
+                textElement.style.transition = 'opacity 0.5s ease';
+                textElement.style.opacity = '1';
+            }, 500);
         }
     });
 </script>

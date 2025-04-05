@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字加密/解密工具 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        .crypto-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        
+        .crypto-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab:hover {
+            color: var(--primary-color);
+        }
+        
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .text-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            resize: vertical;
+            background-color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        
+        .options-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .option {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background-color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e5e5e5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .result {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: rgba(245, 245, 245, 0.8);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .result-title {
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .result-content {
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 4px;
+        }
+        
+        .back-links {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            transform: translateX(5px);
+        }
+        
+        .back-link:before {
+            content: '←';
+            margin-right: 0.5rem;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .options-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>文字加密/解密工具喵～</h1>
+    <p>可以进行各种编码转换和加密解密喵～保护你的小秘密喵～</p>
+    
+    <div class="crypto-container">
+        <div class="tabs">
+            <div class="tab active" data-tab="encode">编码转换</div>
+            <div class="tab" data-tab="encrypt">加密解密</div>
+        </div>
+        
+        <!-- 编码转换 -->
+        <div class="tab-content active" id="encode-tab">
+            <div class="input-group">
+                <label class="input-label">输入要转换的文本喵～</label>
+                <textarea class="text-input" id="encode-input" placeholder="在这里输入文本..."></textarea>
+            </div>
+            
+            <div class="options-group">
+                <div class="option">
+                    <label class="input-label">选择编码方式喵～</label>
+                    <select class="select" id="encode-type">
+                        <option value="base64">Base64</option>
+                        <option value="uri">URL编码</option>
+                        <option value="ascii">ASCII码</option>
+                        <option value="unicode">Unicode编码</option>
+                        <option value="hex">十六进制</option>
+                        <option value="binary">二进制</option>
+                    </select>
+                </div>
+                
+                <div class="option">
+                    <label class="input-label">操作喵～</label>
+                    <select class="select" id="encode-action">
+                        <option value="encode">编码</option>
+                        <option value="decode">解码</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" id="encode-btn">开始转换喵～</button>
+                <button class="btn btn-secondary" id="encode-clear">清空喵～</button>
+                <button class="btn btn-secondary" id="encode-copy">复制结果喵～</button>
+            </div>
+            
+            <div class="result">
+                <div class="result-title">转换结果喵～</div>
+                <div class="result-content" id="encode-result">点击上方按钮开始转换喵～</div>
+            </div>
+        </div>
+        
+        <!-- 加密解密 -->
+        <div class="tab-content" id="encrypt-tab">
+            <div class="input-group">
+                <label class="input-label">输入要加密/解密的文本喵～</label>
+                <textarea class="text-input" id="encrypt-input" placeholder="在这里输入文本..."></textarea>
+            </div>
+            
+            <div class="options-group">
+                <div class="option">
+                    <label class="input-label">选择加密算法喵～</label>
+                    <select class="select" id="encrypt-type">
+                        <option value="aes">AES加密</option>
+                        <option value="des">DES加密</option>
+                        <option value="tripledes">3DES加密</option>
+                        <option value="rabbit">Rabbit加密</option>
+                        <option value="rc4">RC4加密</option>
+                    </select>
+                </div>
+                
+                <div class="option">
+                    <label class="input-label">操作喵～</label>
+                    <select class="select" id="encrypt-action">
+                        <option value="encrypt">加密</option>
+                        <option value="decrypt">解密</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">输入密钥喵～（必填）</label>
+                <input type="text" class="text-input" id="encrypt-key" style="min-height: auto;" placeholder="输入密钥...">
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">输入偏移量喵～（可选）</label>
+                <input type="text" class="text-input" id="encrypt-iv" style="min-height: auto;" placeholder="输入偏移量...">
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" id="encrypt-btn">开始转换喵～</button>
+                <button class="btn btn-secondary" id="encrypt-clear">清空喵～</button>
+                <button class="btn btn-secondary" id="encrypt-copy">复制结果喵～</button>
+            </div>
+            
+            <div class="result">
+                <div class="result-title">转换结果喵～</div>
+                <div class="result-content" id="encrypt-result">点击上方按钮开始转换喵～</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="back-links">
+        <a href="toolbox.html" class="back-link">返回工具箱</a>
+        <a href="index.html" class="back-link">返回主页</a>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 标签切换功能
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+        
+        // 编码转换功能
+        const encodeInput = document.getElementById('encode-input');
+        const encodeType = document.getElementById('encode-type');
+        const encodeAction = document.getElementById('encode-action');
+        const encodeBtn = document.getElementById('encode-btn');
+        const encodeClear = document.getElementById('encode-clear');
+        const encodeCopy = document.getElementById('encode-copy');
+        const encodeResult = document.getElementById('encode-result');
+        
+        // 加密解密功能
+        const encryptInput = document.getElementById('encrypt-input');
+        const encryptType = document.getElementById('encrypt-type');
+        const encryptAction = document.getElementById('encrypt-action');
+        const encryptKey = document.getElementById('encrypt-key');
+        const encryptIv = document.getElementById('encrypt-iv');
+        const encryptBtn = document.getElementById('encrypt-btn');
+        const encryptClear = document.getElementById('encrypt-clear');
+        const encryptCopy = document.getElementById('encrypt-copy');
+        const encryptResult = document.getElementById('encrypt-result');
+        
+        // 编码转换函数
+        function encodeText() {
+            const text = encodeInput.value;
+            if (!text) {
+                encodeResult.textContent = '请输入要转换的文本喵～';
+                return;
+            }
+            
+            const type = encodeType.value;
+            const action = encodeAction.value;
+            let result = '';
+            
+            try {
+                if (action === 'encode') {
+                    switch (type) {
+                        case 'base64':
+                            result = btoa(unescape(encodeURIComponent(text)));
+                            break;
+                        case 'uri':
+                            result = encodeURIComponent(text);
+                            break;
+                        case 'ascii':
+                            result = Array.from(text).map(char => char.charCodeAt(0)).join(' ');
+                            break;
+                        case 'unicode':
+                            result = Array.from(text).map(char => '\\u' + char.charCodeAt(0).toString(16).padStart(4, '0')).join('');
+                            break;
+                        case 'hex':
+                            result = Array.from(text).map(char => char.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+                            break;
+                        case 'binary':
+                            result = Array.from(text).map(char => char.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
+                            break;
+                    }
+                } else {
+                    switch (type) {
+                        case 'base64':
+                            result = decodeURIComponent(escape(atob(text)));
+                            break;
+                        case 'uri':
+                            result = decodeURIComponent(text);
+                            break;
+                        case 'ascii':
+                            result = text.split(' ').map(code => String.fromCharCode(parseInt(code))).join('');
+                            break;
+                        case 'unicode':
+                            result = text.replace(/\\u[\dA-F]{4}/gi, match => String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16)));
+                            break;
+                        case 'hex':
+                            result = text.match(/.{1,2}/g).map(byte => String.fromCharCode(parseInt(byte, 16))).join('');
+                            break;
+                        case 'binary':
+                            result = text.replace(/\s/g, '').match(/.{1,8}/g).map(byte => String.fromCharCode(parseInt(byte, 2))).join('');
+                            break;
+                    }
+                }
+                
+                encodeResult.textContent = result;
+            } catch (error) {
+                encodeResult.textContent = `转换失败喵～: ${error.message}`;
+            }
+        }
+        
+        // 加密解密函数
+        function encryptText() {
+            const text = encryptInput.value;
+            if (!text) {
+                encryptResult.textContent = '请输入要加密/解密的文本喵～';
+                return;
+            }
+            
+            const key = encryptKey.value;
+            if (!key) {
+                encryptResult.textContent = '请输入密钥喵～';
+                return;
+            }
+            
+            const type = encryptType.value;
+            const action = encryptAction.value;
+            const iv = encryptIv.value;
+            let result = '';
+            
+            try {
+                const keyObj = CryptoJS.enc.Utf8.parse(key);
+                let ivObj = null;
+                
+                if (iv) {
+                    ivObj = CryptoJS.enc.Utf8.parse(iv);
+                }
+                
+                if (action === 'encrypt') {
+                    let encrypted;
+                    
+                    switch (type) {
+                        case 'aes':
+                            encrypted = CryptoJS.AES.encrypt(text, keyObj, {
+                                iv: ivObj,
+                                mode: CryptoJS.mode.CBC,
+                                padding: CryptoJS.pad.Pkcs7
+                            });
+                            break;
+                        case 'des':
+                            encrypted = CryptoJS.DES.encrypt(text, keyObj, {
+                                iv: ivObj,
+                                mode: CryptoJS.mode.CBC,
+                                padding: CryptoJS.pad.Pkcs7
+                            });
+                            break;
+                        case 'tripledes':
+                            encrypted = CryptoJS.TripleDES.encrypt(text, keyObj, {
+                                iv: ivObj,
+                                mode: CryptoJS.mode.CBC,
+                                padding: CryptoJS.pad.Pkcs7
+                            });
+                            break;
+                        case 'rabbit':
+                            encrypted = CryptoJS.Rabbit.encrypt(text, keyObj);
+                            break;
+                        case 'rc4':
+                            encrypted = CryptoJS.RC4.encrypt(text, keyObj);
+                            break;
+                    }
+                    
+                    result = encrypted.toString();
+                } else {
+                    let decrypted;
+                    
+                    switch (type) {
+                        case 'aes':
+                            decrypted = CryptoJS.AES.decrypt(text, keyObj, {
+                                iv: ivObj,
+                                mode: CryptoJS.mode.CBC,
+                                padding: CryptoJS.pad.Pkcs7
+                            });
+                            break;
+                        case 'des':
+                            decrypted = CryptoJS.DES.decrypt(text, keyObj, {
+                                iv: ivObj,
+                                mode: CryptoJS.mode.CBC,
+                                padding: CryptoJS.pad.Pkcs7
+                            });
+                            break;
+                        case 'tripledes':
+                            decrypted = CryptoJS.TripleDES.decrypt(text, keyObj, {
+                                iv: ivObj,
+                                mode: CryptoJS.mode.CBC,
+                                padding: CryptoJS.pad.Pkcs7
+                            });
+                            break;
+                        case 'rabbit':
+                            decrypted = CryptoJS.Rabbit.decrypt(text, keyObj);
+                            break;
+                        case 'rc4':
+                            decrypted = CryptoJS.RC4.decrypt(text, keyObj);
+                            break;
+                    }
+                    
+                    result = decrypted.toString(CryptoJS.enc.Utf8);
+                }
+                
+                encryptResult.textContent = result;
+            } catch (error) {
+                encryptResult.textContent = `转换失败喵～: ${error.message}`;
+            }
+        }
+        
+        // 复制函数
+        function copyText(text, resultElement) {
+            if (!text) {
+                resultElement.textContent = '没有可复制的内容喵～';
+                return;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                resultElement.textContent = '复制成功喵～\n' + text;
+                setTimeout(() => {
+                    resultElement.textContent = text;
+                }, 2000);
+            }).catch(err => {
+                resultElement.textContent = `复制失败喵～: ${err.message}`;
+            });
+        }
+        
+        // 绑定事件
+        encodeBtn.addEventListener('click', encodeText);
+        encodeClear.addEventListener('click', () => {
+            encodeInput.value = '';
+            encodeResult.textContent = '点击上方按钮开始转换喵～';
+        });
+        encodeCopy.addEventListener('click', () => copyText(encodeResult.textContent, encodeResult));
+        
+        encryptBtn.addEventListener('click', encryptText);
+        encryptClear.addEventListener('click', () => {
+            encryptInput.value = '';
+            encryptKey.value = '';
+            encryptIv.value = '';
+            encryptResult.textContent = '点击上方按钮开始转换喵～';
+        });
+        encryptCopy.addEventListener('click', () => copyText(encryptResult.textContent, encryptResult));
+    });
+</script>
+</body>
+</html> 

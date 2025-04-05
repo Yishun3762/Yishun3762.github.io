@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字数/字符统计器 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .counter-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        
+        .counter-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+
+        #text-input-area {
+            width: 100%;
+            height: 40vh; /* Adjust height */
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: vertical;
+            background-color: white;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+        
+        #text-input-area:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .stats-display {
+            background: rgba(245, 245, 245, 0.8);
+            padding: 1.5rem;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .btn-clear {
+            margin-top: 1.5rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            background-color: #f44336; /* Red for clear/delete */
+            color: white;
+        }
+        
+        .btn-clear:hover {
+            background-color: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .back-links {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            transform: translateX(-3px);
+        }
+        
+        .back-link:before {
+            content: '←';
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>字数/字符统计器喵～</h1>
+    <p>输入或粘贴文本，快速统计字符、单词和行数喵～</p>
+    
+    <div class="counter-container">
+        <textarea id="text-input-area" placeholder="在这里输入或粘贴文本喵..."></textarea>
+        
+        <div class="stats-display">
+            <div class="stat-item">
+                <div class="stat-title">字符数 (含空格)</div>
+                <div class="stat-value" id="char-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-title">单词数 (英文)</div>
+                <div class="stat-value" id="word-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-title">行数</div>
+                <div class="stat-value" id="line-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-title">段落数</div>
+                <div class="stat-value" id="paragraph-count">0</div>
+            </div>
+        </div>
+        
+        <button id="clear-btn" class="btn-clear">清空内容喵～</button>
+    </div>
+    
+    <div class="back-links">
+        <a href="toolbox.html" class="back-link">返回工具箱</a>
+        <a href="index.html" class="back-link">返回主页</a>
+    </div>
+</div>
+
+<script src="script.js"></script> <!-- Include if you have common scripts -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const textInputArea = document.getElementById('text-input-area');
+        const charCountDisplay = document.getElementById('char-count');
+        const wordCountDisplay = document.getElementById('word-count');
+        const lineCountDisplay = document.getElementById('line-count');
+        const paragraphCountDisplay = document.getElementById('paragraph-count');
+        const clearBtn = document.getElementById('clear-btn');
+
+        // Function to update counts
+        function updateCounts() {
+            const text = textInputArea.value;
+            
+            // Character count
+            charCountDisplay.textContent = text.length;
+            
+            // Word count (simple space/newline split, filter empty)
+            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+            wordCountDisplay.textContent = text.trim() === '' ? 0 : words.length;
+            
+            // Line count
+            const lines = text.split(/\r\n|\r|\n/);
+            // Count non-empty lines or just 1 if input is empty but technically has one line
+            lineCountDisplay.textContent = text === '' ? 0 : lines.length; 
+            
+             // Paragraph count (split by double newlines, filter empty)
+             const paragraphs = text.trim().split(/\r\n\r\n|\r\r|\n\n/).filter(p => p.trim().length > 0);
+             paragraphCountDisplay.textContent = text.trim() === '' ? 0 : paragraphs.length;
+        }
+
+        // Update counts on input
+        textInputArea.addEventListener('input', updateCounts);
+
+        // Clear button functionality
+        clearBtn.addEventListener('click', () => {
+            textInputArea.value = '';
+            updateCounts(); // Reset counts to 0
+        });
+
+        // Initial count update in case there's prefilled text (unlikely here)
+        updateCounts();
+    });
+</script>
+</body>
+</html> 

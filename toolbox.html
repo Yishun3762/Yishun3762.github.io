@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .tools-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        
+        .tools-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+        
+        .tool-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .tool-card:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 12px var(--shadow-color);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .tool-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .tool-info {
+            flex-grow: 1;
+        }
+        
+        .tool-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-color);
+        }
+        
+        .tool-info p {
+            margin: 0;
+            color: #666;
+        }
+
+        
+        .back-home {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+        
+        .back-home:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html" class="active">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>猫娘的魔法工具箱喵～</h1>
+    <p>欢迎来到喵喵的工具箱喵～这里有一些奇妙的工具可以帮助到你喵～</p>
+    
+    <div class="tools-container">
+        <a href="random-wallpaper.html" class="tool-card">
+            <div class="tool-icon">✎</div>
+            <div class="tool-info">
+                <h3>随机二次元壁纸</h3>
+                <p>随机精美的二次元壁纸喵～让你的桌面焕然一新喵～</p>
+            </div>
+        </a>
+        
+        <a href="fortune-telling.html" class="tool-card">
+            <div class="tool-icon">🔮</div>
+            <div class="tool-info">
+                <h3>今日运势占卜</h3>
+                <p>让二次元角色帮你占卜今日运势喵～看看你今天的幸运指数喵～</p>
+            </div>
+        </a>
+        
+        <a href="japanese-hiragana.html" class="tool-card">
+            <div class="tool-icon">📚</div>
+            <div class="tool-info">
+                <h3>日语五十音图学习</h3>
+                <p>轻松学习日语假名喵～附带发音和记忆技巧喵～</p>
+            </div>
+        </a>
+        
+        <a href="random-decision.html" class="tool-card">
+            <div class="tool-icon">🎲</div>
+            <div class="tool-info">
+                <h3>随机抽签工具</h3>
+                <p>让二次元角色帮你做决定喵～解决选择困难症喵～</p>
+            </div>
+        </a>
+
+        <a href="text-crypto.html" class="tool-card">
+            <div class="tool-icon">🔐</div>
+            <div class="tool-info">
+                <h3>文字加密/解密</h3>
+                <p>各种编码转换与加密解密工具喵～</p>
+            </div>
+        </a>
+
+        <a href="password-generator.html" class="tool-card">
+            <div class="tool-icon">🔑</div>
+            <div class="tool-info">
+                <h3>密码生成器</h3>
+                <p>生成强度高、随机的密码喵～</p>
+            </div>
+        </a>
+
+        <a href="qrcode-generator.html" class="tool-card">
+            <div class="tool-icon">📱</div>
+            <div class="tool-info">
+                <h3>二维码生成器</h3>
+                <p>将文本或网址生成二维码图片喵～</p>
+            </div>
+        </a>
+
+        <a href="notepad.html" class="tool-card">
+            <div class="tool-icon">📝</div>
+            <div class="tool-info">
+                <h3>简易记事本</h3>
+                <p>随手记录临时想法和信息喵～</p>
+            </div>
+        </a>
+
+        <a href="text-counter.html" class="tool-card">
+            <div class="tool-icon">🔢</div>
+            <div class="tool-info">
+                <h3>字数/字符统计器</h3>
+                <p>快速统计文本的字数和字符数喵～</p>
+            </div>
+        </a>
+
+        <a href="image-processor.html" class="tool-card">
+            <div class="tool-icon">🖼️</div>
+            <div class="tool-info">
+                <h3>图片压缩/调整大小</h3>
+                <p>优化图片大小或调整尺寸喵～</p>
+            </div>
+        </a>
+    </div>
+    
+    <p style="color: white;">更多工具正在开发中喵～敬请期待喵～</p>
+    <a href="index.html" class="back-home">返回主页</a>
+</div>
+
+<script src="script.js"></script>
+<script>
+    // 为当前页面的导航项添加active类
+    document.addEventListener('DOMContentLoaded', () => {
+        const navLinks = document.querySelectorAll('.nav a');
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === 'toolbox.html') {
+                link.parentElement.classList.add('active');
+            }
+        });
+    });
+</script>
+</body>
+</html>

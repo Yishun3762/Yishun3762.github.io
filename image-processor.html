@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片批量压缩/调整大小 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Include browser-image-compression library -->
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+    <style>
+        .processor-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        
+        .processor-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+
+        .upload-section, .options-section, .batch-results-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background: rgba(245, 245, 245, 0.8);
+        }
+
+        .upload-label {
+            display: block;
+            padding: 1.5rem;
+            border: 2px dashed var(--primary-color);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            background-color: white;
+            transition: background-color 0.3s ease;
+            margin-bottom: 1rem; /* Add margin below label */
+        }
+        
+        .upload-label:hover {
+            background-color: #eef;
+        }
+        
+        #image-input {
+            display: none;
+        }
+
+        .file-list-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 0.5rem;
+            background: white;
+            margin-bottom: 1rem;
+        }
+
+        .file-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+        .file-list-item:last-child {
+            border-bottom: none;
+        }
+        .file-name {
+            flex-grow: 1;
+            margin-right: 1rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .file-size {
+             color: #666;
+             margin-right: 1rem;
+             min-width: 70px;
+             text-align: right;
+        }
+         .file-status {
+             font-weight: bold;
+             min-width: 80px;
+             text-align: right;
+        }
+        .status-pending { color: #aaa; }
+        .status-processing { color: orange; }
+        .status-done { color: green; }
+        .status-error { color: red; }
+        
+        .file-download-link {
+            margin-left: 1rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .file-download-link:hover { text-decoration: underline; }
+        .file-download-link.hidden { display: none; }
+
+        .options-section label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .options-section input[type="number"],
+        .options-section input[type="range"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+        
+        .options-section input[type="range"] {
+            cursor: pointer;
+        }
+
+        .quality-value {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .btn-group {
+             display: flex;
+             gap: 1rem;
+             margin-top: 1.5rem;
+             justify-content: center;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            min-width: 150px; /* Ensure buttons have minimum width */
+        }
+        
+        .btn:disabled {
+             background-color: #ccc;
+             color: #888;
+             cursor: not-allowed;
+             transform: none;
+             box-shadow: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background-color: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .btn-secondary {
+            background-color: #4CAF50; /* Green for download all */
+            color: white;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .processing-summary {
+             margin-top: 1rem;
+             text-align: center;
+             font-weight: bold;
+             height: 1.2em;
+        }
+
+        .back-links {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            transform: translateX(-3px);
+        }
+        
+        .back-link:before {
+            content: '←';
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>图片批量压缩/调整大小喵～</h1>
+    <p>选择多张图片，统一进行压缩和调整大小处理喵～</p>
+    
+    <div class="processor-container">
+        <div class="upload-section">
+            <input type="file" id="image-input" accept="image/png, image/jpeg, image/webp, image/gif" multiple>
+            <label for="image-input" class="upload-label">点击这里选择多张图片文件喵～</label>
+            <div class="file-list-container" id="file-list">请先选择文件喵...</div>
+        </div>
+
+        <div class="options-section" id="options-section">
+             <h3>处理选项喵～ (将应用于所有图片)</h3>
+             <div>
+                 <label for="max-size">最大宽度或高度 (像素, 0表示不限制):</label>
+                 <input type="number" id="max-size" value="1920" min="0">
+             </div>
+             <div>
+                 <label for="quality">压缩质量 (0.1 - 1.0): <span id="quality-value" class="quality-value">0.8</span></label>
+                 <input type="range" id="quality" min="0.1" max="1.0" step="0.05" value="0.8">
+             </div>
+              <div>
+                 <label for="max-filesize">最大文件大小 (MB, 0表示不限制):</label>
+                 <input type="number" id="max-filesize" value="1" min="0" step="0.1">
+             </div>
+        </div>
+
+        <div class="batch-results-section">
+             <h3>处理结果喵～</h3>
+             <div class="file-list-container" id="results-list">等待处理喵...</div>
+             <div class="processing-summary" id="processing-summary"></div>
+             <div class="btn-group">
+                <button id="process-all-btn" class="btn btn-primary" disabled>开始处理全部喵～</button>
+                <button id="download-all-btn" class="btn btn-secondary" disabled>下载全部(独立文件)</button>
+             </div>
+        </div>
+
+    </div>
+    
+    <div class="back-links">
+        <a href="toolbox.html" class="back-link">返回工具箱</a>
+        <a href="index.html" class="back-link">返回主页</a>
+    </div>
+</div>
+
+<script src="script.js"></script> <!-- Include if you have common scripts -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const imageInput = document.getElementById('image-input');
+        const fileListContainer = document.getElementById('file-list');
+        const resultsListContainer = document.getElementById('results-list');
+        const optionsSection = document.getElementById('options-section');
+        const maxSizeInput = document.getElementById('max-size');
+        const qualitySlider = document.getElementById('quality');
+        const qualityValue = document.getElementById('quality-value');
+        const maxFilesizeInput = document.getElementById('max-filesize');
+        const processAllBtn = document.getElementById('process-all-btn');
+        const downloadAllBtn = document.getElementById('download-all-btn');
+        const processingSummary = document.getElementById('processing-summary');
+        
+        let selectedFiles = []; // Array to hold selected file objects { file: File, id: string }
+        let processedResults = {}; // Object to hold processed results { id: { blob: Blob, status: string, originalSize: number, processedSize: number | null, error: string | null } }
+        
+        // --- Helper Functions ---
+        function formatBytes(bytes, decimals = 2) {
+            if (!bytes || bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            // Check if bytes is a valid number before using Math.log
+            if (isNaN(bytes) || !isFinite(bytes)) return 'Invalid Size';
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+             // Ensure i is within the bounds of the sizes array
+            const index = Math.max(0, Math.min(i, sizes.length - 1)); 
+            return parseFloat((bytes / Math.pow(k, index)).toFixed(dm)) + ' ' + sizes[index];
+        }
+        
+        function generateFileId(file) {
+            // Create a somewhat unique ID based on name, size, and last modified time
+            return `${file.name}_${file.size}_${file.lastModified}`;
+        }
+
+        // --- UI Update Functions ---
+        function updateFileListUI() {
+            fileListContainer.innerHTML = ''; // Clear list
+            if (selectedFiles.length === 0) {
+                fileListContainer.textContent = '请先选择文件喵...';
+                processAllBtn.disabled = true;
+                return;
+            }
+            
+            selectedFiles.forEach(item => {
+                const listItem = document.createElement('div');
+                listItem.className = 'file-list-item';
+                listItem.innerHTML = 
+                   `<span class="file-name" title="${item.file.name}">${item.file.name}</span>
+                    <span class="file-size">${formatBytes(item.file.size)}</span>`;
+                fileListContainer.appendChild(listItem);
+            });
+            processAllBtn.disabled = false;
+        }
+
+        function updateResultsListUI() {
+             resultsListContainer.innerHTML = ''; // Clear list
+             let processedCount = 0;
+             let successCount = 0;
+
+             if (selectedFiles.length === 0) {
+                 resultsListContainer.textContent = '等待处理喵...';
+                 downloadAllBtn.disabled = true;
+                 return;
+             }
+
+             selectedFiles.forEach(item => {
+                const result = processedResults[item.id] || { status: 'pending' }; // Default to pending
+                const listItem = document.createElement('div');
+                listItem.className = 'file-list-item';
+                
+                let statusClass = 'status-pending';
+                let statusText = '待处理';
+                let resultInfo = '';
+                let downloadLink = '<a href="#" class="file-download-link hidden">下载</a>';
+                
+                if (result.status === 'processing') {
+                    statusClass = 'status-processing';
+                    statusText = '处理中...';
+                    processedCount++;
+                } else if (result.status === 'done') {
+                    statusClass = 'status-done';
+                    statusText = '完成';
+                    resultInfo = `(${formatBytes(result.processedSize)})`;
+                    downloadLink = `<a href="#" class="file-download-link" data-file-id="${item.id}">下载</a>`;
+                    processedCount++;
+                    successCount++;
+                } else if (result.status === 'error') {
+                    statusClass = 'status-error';
+                    statusText = '错误';
+                    resultInfo = `(${result.error || '未知错误'})`;
+                    processedCount++;
+                }
+
+                listItem.innerHTML = 
+                   `<span class="file-name" title="${item.file.name}">${item.file.name}</span>
+                    <span class="file-size">${formatBytes(item.file.size)} -> ${resultInfo}</span>
+                    <span class="file-status ${statusClass}">${statusText}</span>
+                    ${downloadLink}`;
+                resultsListContainer.appendChild(listItem);
+             });
+             
+             // Add event listeners for individual download links
+             resultsListContainer.querySelectorAll('.file-download-link:not(.hidden)').forEach(link => {
+                 link.addEventListener('click', (e) => {
+                     e.preventDefault();
+                     const fileId = e.target.dataset.fileId;
+                     handleSingleDownload(fileId);
+                 });
+             });
+
+             // Enable download all button only if there are successful results
+             downloadAllBtn.disabled = successCount === 0;
+             
+             // Update summary
+             if(processedCount > 0) {
+                 processingSummary.textContent = `已处理 ${processedCount} / ${selectedFiles.length} 个文件喵~`;
+             } else {
+                 processingSummary.textContent = '';
+             }
+        }
+
+        // --- Event Handlers ---
+        qualitySlider.addEventListener('input', () => {
+            qualityValue.textContent = parseFloat(qualitySlider.value).toFixed(2);
+        });
+
+        imageInput.addEventListener('change', (event) => {
+            selectedFiles = Array.from(event.target.files).map(file => ({ file, id: generateFileId(file) }));
+            processedResults = {}; // Reset results
+            updateFileListUI();
+            updateResultsListUI(); // Reset results UI
+            processingSummary.textContent = ''; // Clear summary
+        });
+
+        processAllBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return;
+            
+            processAllBtn.disabled = true;
+            downloadAllBtn.disabled = true; // Disable while processing
+            processingSummary.textContent = `开始处理 ${selectedFiles.length} 个文件喵...`;
+            
+            const maxSize = parseInt(maxSizeInput.value) || undefined;
+            const quality = parseFloat(qualitySlider.value);
+            const maxFileSizeMB = parseFloat(maxFilesizeInput.value) || undefined;
+
+            const options = {
+                maxSizeMB: maxFileSizeMB,
+                maxWidthOrHeight: maxSize,
+                initialQuality: quality,
+                useWebWorker: true,
+            };
+            
+            const processingPromises = selectedFiles.map(async (item) => {
+                const fileId = item.id;
+                processedResults[fileId] = { status: 'processing', originalSize: item.file.size, processedSize: null, blob: null, error: null };
+                updateResultsListUI(); // Update UI to show 'processing'
+                
+                try {
+                    const compressedFile = await imageCompression(item.file, options);
+                    processedResults[fileId] = {
+                        ...processedResults[fileId],
+                        status: 'done',
+                        processedSize: compressedFile.size,
+                        blob: compressedFile
+                    };
+                } catch (error) {
+                    console.error(`处理文件 ${item.file.name} 失败喵:`, error);
+                    processedResults[fileId] = {
+                        ...processedResults[fileId],
+                        status: 'error',
+                        error: error.message || '压缩失败'
+                    };
+                }
+                updateResultsListUI(); // Update UI after this file is done/failed
+            });
+
+            await Promise.all(processingPromises);
+            
+            // Re-enable process button after all finish (might allow re-processing)
+            processAllBtn.disabled = false; 
+             // Download button state updated within updateResultsListUI
+            console.log("全部处理完成喵!");
+        });
+        
+        function handleSingleDownload(fileId) {
+             const result = processedResults[fileId];
+             if (!result || result.status !== 'done' || !result.blob) {
+                 console.error(`无法下载文件 ${fileId}, 状态不正确或无数据喵`);
+                 return;
+             }
+             
+             const originalFile = selectedFiles.find(item => item.id === fileId)?.file;
+             const baseName = originalFile ? (originalFile.name.substring(0, originalFile.name.lastIndexOf('.')) || originalFile.name) : fileId;
+             const extension = originalFile ? originalFile.name.substring(originalFile.name.lastIndexOf('.')) : '.png'; // Default extension
+
+             const url = URL.createObjectURL(result.blob);
+             const a = document.createElement('a');
+             a.href = url;
+             a.download = `${baseName}_processed${extension}`;
+             document.body.appendChild(a);
+             a.click();
+             document.body.removeChild(a);
+             URL.revokeObjectURL(url);
+        }
+
+        downloadAllBtn.addEventListener('click', () => {
+            let downloadedCount = 0;
+            selectedFiles.forEach(item => {
+                const result = processedResults[item.id];
+                if (result && result.status === 'done' && result.blob) {
+                    handleSingleDownload(item.id);
+                    downloadedCount++;
+                }
+            });
+            console.log(`触发了 ${downloadedCount} 个文件的下载喵～`);
+        });
+
+        // --- Initial Setup ---
+        updateFileListUI();
+        updateResultsListUI();
+    });
+</script>
+</body>
+</html> 

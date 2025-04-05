@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码生成器 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Include QR Code generation library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@latest/build/qrcode.min.js"></script>
+    <style>
+        .qr-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: all 0.3s ease;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+        }
+        
+        .qr-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+            text-align: left;
+        }
+        
+        .text-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            resize: vertical;
+            background-color: white;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .qr-code-display {
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+            min-height: 200px; /* Placeholder height */
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px dashed #ccc;
+        }
+
+        #qrcode canvas {
+            max-width: 100%;
+            height: auto !important; /* Override default inline style */
+            display: block; /* Prevent extra space below canvas */
+        }
+        
+        #qrcode img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: auto; /* Center the image if it's smaller */
+        }
+        
+        .btn-group {
+             display: flex;
+             gap: 1rem;
+             margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e5e5e5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .btn-secondary:disabled {
+            background-color: #e0e0e0;
+            color: #aaa;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .back-links {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            transform: translateX(-3px);
+        }
+        
+        .back-link:before {
+            content: '←';
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>二维码生成器喵～</h1>
+    <p>输入文本或网址，快速生成二维码图片喵～</p>
+    
+    <div class="qr-container">
+        <div class="input-group">
+            <label for="qr-text" class="input-label">输入内容喵～:</label>
+            <textarea id="qr-text" class="text-input" rows="3" placeholder="例如：https://example.com 或者 一段文字喵～"></textarea>
+        </div>
+
+        <div class="qr-code-display" id="qrcode">请先输入内容并点击生成喵～</div>
+        
+        <div class="btn-group">
+             <button id="generate-btn" class="btn btn-primary">生成二维码喵～</button>
+             <button id="download-btn" class="btn btn-secondary" disabled>下载二维码喵～</button>
+        </div>
+    </div>
+    
+    <div class="back-links">
+        <a href="toolbox.html" class="back-link">返回工具箱</a>
+        <a href="index.html" class="back-link">返回主页</a>
+    </div>
+</div>
+
+<script src="script.js"></script> <!-- Include if you have common scripts -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const qrTextInput = document.getElementById('qr-text');
+        const generateBtn = document.getElementById('generate-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const qrCodeContainer = document.getElementById('qrcode');
+        let qrCodeDataUrl = null; // Store the generated QR code data URL
+
+        // Generate QR Code function
+        function generateQRCode() {
+            const text = qrTextInput.value.trim();
+            qrCodeContainer.innerHTML = ''; // Clear previous QR code
+            qrCodeDataUrl = null; // Reset data URL
+            downloadBtn.disabled = true;
+
+            if (!text) {
+                qrCodeContainer.textContent = '请输入要生成二维码的内容喵～';
+                return;
+            }
+
+            QRCode.toDataURL(text, { 
+                errorCorrectionLevel: 'H', // High error correction level
+                type: 'image/png',
+                margin: 2, // Margin around QR code
+                width: 256 // Set desired width (library calculates optimal size)
+             }, function (err, url) {
+                if (err) {
+                    console.error("生成二维码失败喵: ", err);
+                    qrCodeContainer.textContent = '生成二维码失败了喵... 请检查输入内容或稍后再试喵～';
+                    return;
+                }
+                
+                // Create an img element to display the QR code
+                const img = document.createElement('img');
+                img.src = url;
+                qrCodeContainer.appendChild(img);
+                qrCodeDataUrl = url; // Store for download
+                downloadBtn.disabled = false; // Enable download button
+            });
+        }
+
+        // Download QR Code function
+        function downloadQRCode() {
+            if (!qrCodeDataUrl) return;
+
+            const a = document.createElement('a');
+            a.href = qrCodeDataUrl;
+            a.download = 'qrcode.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Event listeners
+        generateBtn.addEventListener('click', generateQRCode);
+        downloadBtn.addEventListener('click', downloadQRCode);
+    });
+</script>
+</body>
+</html> 

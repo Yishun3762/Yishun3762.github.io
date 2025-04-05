@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今日运势占卜 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .fortune-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .fortune-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+        
+        .fortune-box {
+            position: relative;
+            margin: 2rem auto;
+            max-width: 600px;
+        }
+        
+        .character-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            border-radius: 12px;
+            background: rgba(245, 245, 245, 0.8);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+        
+        .character-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            transition: all 0.5s ease;
+        }
+        
+        .fortune-result {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+        
+        .fortune-result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .fortune-header {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .fortune-content {
+            color: #444;
+        }
+        
+        .fortune-details {
+            margin-top: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .fortune-item {
+            flex: 1;
+            min-width: 120px;
+            background: rgba(240, 240, 240, 0.9);
+            padding: 0.8rem;
+            border-radius: 8px;
+        }
+        
+        .fortune-item-title {
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .fortune-item-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .fortune-item-star {
+            color: gold;
+            letter-spacing: -3px;
+            font-size: 1.2rem;
+        }
+        
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            margin-top: 1rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .fortune-quote {
+            font-style: italic;
+            color: #666;
+            margin-top: 1rem;
+            padding: 0.8rem;
+            background: rgba(240, 240, 240, 0.7);
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .fortune-quote::before {
+            content: '"';
+            position: absolute;
+            left: 5px;
+            top: -5px;
+            font-size: 2rem;
+            color: #ccc;
+        }
+        
+        .fortune-quote::after {
+            content: '"';
+            position: absolute;
+            right: 5px;
+            bottom: -20px;
+            font-size: 2rem;
+            color: #ccc;
+        }
+        
+        .name-input {
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            margin-right: 0.5rem;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .name-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        
+        .divination-animation {
+            margin: 2rem auto;
+            width: 60px;
+            height: 60px;
+            position: relative;
+            display: none;
+        }
+        
+        .divination-animation.active {
+            display: block;
+        }
+        
+        .divination-animation .dot {
+            width: 15px;
+            height: 15px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            position: absolute;
+            animation: move 1.8s infinite cubic-bezier(0.2, 0.64, 0.81, 0.23);
+        }
+        
+        .divination-animation .dot:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+        
+        .divination-animation .dot:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+        
+        .divination-animation .dot:nth-child(4) {
+            animation-delay: 0.45s;
+        }
+        
+        @keyframes move {
+            0% { top: 0; left: 0; }
+            25% { top: 0; left: 45px; }
+            50% { top: 45px; left: 45px; }
+            75% { top: 45px; left: 0; }
+            100% { top: 0; left: 0; }
+        }
+        
+        .back-links {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            transform: translateX(5px);
+        }
+        
+        .back-link:before {
+            content: '←';
+            margin-right: 0.5rem;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .fortune-details {
+                flex-direction: column;
+            }
+            
+            .fortune-item {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>今日运势占卜喵～</h1>
+    <p>让二次元角色帮你占卜今日运势喵～看看今天你的幸运指数喵～</p>
+    
+    <div class="fortune-container">
+        <p>请输入你的名字喵～（不输入也可以喵～）</p>
+        <input type="text" class="name-input" id="nameInput" placeholder="输入你的名字...">
+        <button id="fortuneBtn" class="btn btn-primary">开始占卜喵～</button>
+        
+        <div class="divination-animation" id="fortuneAnimation">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        
+        <div class="fortune-box">
+            <div class="character-container">
+                <img id="characterImg" class="character-img" src="" alt="占卜角色" style="display: none;">
+            </div>
+            
+            <div class="fortune-result" id="fortuneResult">
+                <div class="fortune-header" id="fortuneHeader"></div>
+                <div class="fortune-content" id="fortuneContent"></div>
+                
+                <div class="fortune-details">
+                    <div class="fortune-item">
+                        <div class="fortune-item-title">爱情运</div>
+                        <div class="fortune-item-value" id="loveValue">--</div>
+                        <div class="fortune-item-star" id="loveStar"></div>
+                    </div>
+                    
+                    <div class="fortune-item">
+                        <div class="fortune-item-title">财富运</div>
+                        <div class="fortune-item-value" id="wealthValue">--</div>
+                        <div class="fortune-item-star" id="wealthStar"></div>
+                    </div>
+                    
+                    <div class="fortune-item">
+                        <div class="fortune-item-title">学业运</div>
+                        <div class="fortune-item-value" id="studyValue">--</div>
+                        <div class="fortune-item-star" id="studyStar"></div>
+                    </div>
+                </div>
+                
+                <div class="fortune-quote" id="fortuneQuote"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="back-links">
+        <a href="toolbox.html" class="back-link">返回工具箱</a>
+        <a href="index.html" class="back-link">返回主页</a>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const fortuneBtn = document.getElementById('fortuneBtn');
+        const nameInput = document.getElementById('nameInput');
+        const characterImg = document.getElementById('characterImg');
+        const fortuneResult = document.getElementById('fortuneResult');
+        const fortuneHeader = document.getElementById('fortuneHeader');
+        const fortuneContent = document.getElementById('fortuneContent');
+        const fortuneQuote = document.getElementById('fortuneQuote');
+        const fortuneAnimation = document.getElementById('fortuneAnimation');
+        
+        // 运势评分元素
+        const loveValue = document.getElementById('loveValue');
+        const wealthValue = document.getElementById('wealthValue');
+        const studyValue = document.getElementById('studyValue');
+        const loveStar = document.getElementById('loveStar');
+        const wealthStar = document.getElementById('wealthStar');
+        const studyStar = document.getElementById('studyStar');
+        
+        // 二次元角色列表
+        const characters = [
+            { name: "初音未来", img: "https://i.postimg.cc/Sxk11XSD/miku.png" },
+            { name: "雷姆", img: "https://i.postimg.cc/VLzP0v9v/rem.png" },
+            { name: "兔田佩克拉", img: "https://i.postimg.cc/d3Mc2xG0/pekora.png" },
+            { name: "阿库娅", img: "https://i.postimg.cc/VNgtjpTJ/aqua.png" },
+            { name: "琪亚娜·卡斯兰娜", img: "https://i.postimg.cc/qRchZfGN/kiana.png" },
+            { name: "雷电芽衣", img: "https://i.postimg.cc/q7c2KtVT/mei.png" },
+            { name: "宁宁", img: "https://i.postimg.cc/q7fLWTx9/nene.png" },
+            { name: "爱莉希雅", img: "https://i.postimg.cc/85hDxJx5/elysia.png" },
+            { name: "可莉", img: "https://i.postimg.cc/LXRkjYvL/klee.png" },
+            { name: "甘雨", img: "https://i.postimg.cc/nhTWzGK7/ganyu.png" }
+        ];
+        
+        // 运势列表
+        const fortunes = [
+            { level: "大吉", desc: "今天是非常幸运的一天喵！所有事情都会朝着好的方向发展喵～充满惊喜与机遇的一天喵～", quote: "幸福不会被动地等来，而是要主动去发现和创造喵～" },
+            { level: "中吉", desc: "今天运势不错喵！可能会有一些小小的惊喜等着你喵～保持积极的心态喵～", quote: "微笑面对每一天，好运就会不请自来喵～" },
+            { level: "小吉", desc: "今天运势尚可喵～虽然不会有特别大的好事，但日常会很顺利喵～", quote: "平淡中蕴含着幸福，珍惜当下的每一刻喵～" },
+            { level: "末吉", desc: "今天运势一般喵～可能会遇到一些小麻烦，但都能顺利解决喵～", quote: "困难只是暂时的，坚持下去就会看到彩虹喵～" },
+            { level: "末小吉", desc: "今天运势稍差喵～做事需要多加小心喵～不过不要担心，明天会更好喵～", quote: "风雨过后总会有彩虹，耐心等待喵～" },
+            { level: "凶", desc: "今天运势不佳喵～可能会遇到一些麻烦事喵～建议低调行事，避免冲动喵～", quote: "逆境是成长的机会，坚强面对困难喵～" },
+            { level: "大凶", desc: "今天运势不太好喵～可能会遇到一些挫折喵～但不要灰心，这只是暂时的喵～", quote: "人生不如意十之八九，保持乐观心态才能转运喵～" }
+        ];
+        
+        // 随机生成运势
+        function generateFortune() {
+            // 显示占卜动画
+            fortuneAnimation.classList.add('active');
+            fortuneResult.classList.remove('show');
+            characterImg.style.display = 'none';
+            
+            // 模拟占卜过程
+            setTimeout(() => {
+                // 随机选择角色
+                const character = characters[Math.floor(Math.random() * characters.length)];
+                
+                // 随机选择运势
+                const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+                
+                // 生成各项运势分数
+                const loveScore = Math.floor(Math.random() * 100) + 1;
+                const wealthScore = Math.floor(Math.random() * 100) + 1;
+                const studyScore = Math.floor(Math.random() * 100) + 1;
+                
+                // 更新DOM
+                characterImg.src = character.img;
+                characterImg.alt = character.name;
+                
+                const userName = nameInput.value.trim() || "你";
+                
+                fortuneHeader.textContent = `${character.name}为${userName}占卜的结果是：${fortune.level}`;
+                fortuneContent.textContent = fortune.desc;
+                fortuneQuote.textContent = fortune.quote;
+                
+                loveValue.textContent = loveScore;
+                wealthValue.textContent = wealthScore;
+                studyValue.textContent = studyScore;
+                
+                // 根据分数显示星星
+                loveStar.textContent = getStars(loveScore);
+                wealthStar.textContent = getStars(wealthScore);
+                studyStar.textContent = getStars(studyScore);
+                
+                // 隐藏占卜动画，显示结果
+                fortuneAnimation.classList.remove('active');
+                characterImg.style.display = 'block';
+                
+                // 添加延迟以创建更好的视觉效果
+                setTimeout(() => {
+                    fortuneResult.classList.add('show');
+                }, 300);
+                
+            }, 2000); // 占卜动画持续2秒
+        }
+        
+        // 根据分数返回星星显示
+        function getStars(score) {
+            if (score >= 90) return "★★★★★";
+            if (score >= 75) return "★★★★☆";
+            if (score >= 60) return "★★★☆☆";
+            if (score >= 40) return "★★☆☆☆";
+            if (score >= 20) return "★☆☆☆☆";
+            return "☆☆☆☆☆";
+        }
+        
+        // 点击占卜按钮
+        fortuneBtn.addEventListener('click', generateFortune);
+    });
+</script>
+</body>
+</html> 

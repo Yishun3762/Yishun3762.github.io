@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机二次元壁纸 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .wallpaper-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: all 0.3s ease;
+            text-align: center;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .wallpaper-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+        
+        .wallpaper-box {
+            position: relative;
+            width: 100%;
+            min-height: 500px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+        
+        .wallpaper-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s ease;
+            cursor: pointer;
+        }
+        
+        .wallpaper-img:hover {
+            transform: scale(1.02);
+        }
+        
+        .loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+        
+        .loading-indicator::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e5e5e5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .btn-download {
+            display: inline-block;
+            margin-top: 1rem;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-download:hover {
+            color: #3a7bc8;
+            text-decoration: underline;
+        }
+        
+        .back-links {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            transform: translateX(5px);
+        }
+        
+        .back-link:before {
+            content: '←';
+            margin-right: 0.5rem;
+        }
+        
+        /* 全屏模式样式 */
+        .fullscreen-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+        
+        .fullscreen-view.active {
+            display: flex;
+        }
+        
+        .fullscreen-img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+        
+        .fullscreen-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .fullscreen-btn {
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .fullscreen-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .close-fullscreen {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2rem;
+            color: white;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        /* 图片信息样式 */
+        .image-info {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        /* 源选择器样式 */
+        .source-selector {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .source-label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+        
+        .source-select {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background-color: white;
+            width: 100%;
+            max-width: 400px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .source-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        
+        /* 源切换标签样式 */
+        .source-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .source-tab {
+            padding: 0.5rem 1rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .source-tab:hover {
+            background-color: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+        
+        .source-tab.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        /* 调整侧边栏 */
+        @media (min-width: 1200px) {
+            .content {
+                margin-left: 320px;
+                padding: 3rem;
+                max-width: 1200px;
+            }
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .source-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>随机二次元壁纸喵～</h1>
+    <p>每次都会随机显示一张超可爱的二次元壁纸喵～收藏起来做壁纸吧喵～<br>点击图片可以全屏查看喵～</p>
+    
+    <div class="wallpaper-container">
+        <div class="source-selector">
+            <div class="source-label">选择壁纸源喵～</div>
+            <div class="source-tabs" id="source-tabs">
+                <!-- 源标签会通过JS动态生成 -->
+            </div>
+        </div>
+        
+        <div class="wallpaper-box">
+            <div class="loading-indicator">加载中</div>
+            <img id="wallpaper" class="wallpaper-img" style="display: none;" alt="随机二次元壁纸">
+        </div>
+        
+        <div class="image-info" id="source-info">图片来源: dmoe.cc</div>
+        
+        <div class="btn-group">
+            <button id="refresh-btn" class="btn btn-primary">换一张喵～</button>
+            <a id="download-btn" class="btn btn-secondary" download>保存壁纸</a>
+            <button id="fullscreen-btn" class="btn btn-secondary">全屏查看</button>
+        </div>
+    </div>
+    
+    <div class="back-links">
+        <a href="toolbox.html" class="back-link">返回工具箱</a>
+        <a href="index.html" class="back-link">返回主页</a>
+    </div>
+</div>
+
+<!-- 全屏查看模式 -->
+<div class="fullscreen-view">
+    <button class="close-fullscreen">×</button>
+    <img class="fullscreen-img" alt="全屏查看">
+    <div class="fullscreen-controls">
+        <button class="fullscreen-btn" id="prev-btn">上一张</button>
+        <button class="fullscreen-btn" id="save-btn">保存图片</button>
+        <button class="fullscreen-btn" id="next-btn">下一张</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const wallpaperImg = document.getElementById('wallpaper');
+        const loadingIndicator = document.querySelector('.loading-indicator');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const fullscreenView = document.querySelector('.fullscreen-view');
+        const fullscreenImg = document.querySelector('.fullscreen-img');
+        const closeFullscreen = document.querySelector('.close-fullscreen');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const sourceInfo = document.getElementById('source-info');
+        const sourceTabs = document.getElementById('source-tabs');
+        
+        // 定义所有API源
+        const sources = [
+            { id: 'dmoe', name: '动漫之家', url: 'https://www.dmoe.cc/random.php', description: 'dmoe.cc' },
+            { id: 'boxmoe', name: '盒子萌', url: 'https://api.boxmoe.com/random.php', description: 'boxmoe.com' },
+            { id: 'origz-pixiv', name: '源初云-Pixiv', url: 'https://rpic.origz.com/api.php?category=pixiv', description: 'origz.com - Pixiv' },
+            { id: 'mtyqx', name: '墨天逸', url: 'https://api.mtyqx.cn/api/random.php', description: 'mtyqx.cn' },
+            { id: 'mtyqx-t', name: '墨天逸T', url: 'https://api.mtyqx.cn/tapi/random.php', description: 'mtyqx.cn (T)' },
+            { id: 'touhou', name: '东方Project', url: 'https://img.paulzzh.com/touhou/random', description: 'paulzzh.com - 东方' },
+            { id: 'likepoems', name: 'LikePoems', url: 'https://api.likepoems.com/img/pc', description: 'likepoems.com' },
+            { id: 'alcy-ycy', name: '栗次元-YCY', url: 'https://t.alcy.cc/ycy', description: 'alcy.cc - YCY' },
+            { id: 'alcy-moez', name: '栗次元-Moez', url: 'https://t.alcy.cc/moez', description: 'alcy.cc - Moez' },
+            { id: 'alcy-moe', name: '栗次元-Moe', url: 'https://t.alcy.cc/moe', description: 'alcy.cc - Moe' },
+            { id: 'paugram', name: '保罗壁纸', url: 'https://api.paugram.com/wallpaper/', description: 'paugram.com' },
+            { id: 'rls-h', name: 'RLS横屏', url: 'https://api.rls.ovh/horizontal', description: 'rls.ovh - 横屏' },
+            { id: 'rls-v', name: 'RLS竖屏', url: 'https://api.rls.ovh/vertical', description: 'rls.ovh - 竖屏' },
+            { id: 'rls-a', name: 'RLS自适应', url: 'https://api.rls.ovh/adaptive', description: 'rls.ovh - 自适应' }
+        ];
+        
+        // 存储最近的5张图片URL
+        const recentImages = [];
+        let currentImageIndex = -1;
+        let currentSource = sources[0]; // 默认源
+        
+        // 创建源标签
+        function createSourceTabs() {
+            sources.forEach(source => {
+                const tab = document.createElement('div');
+                tab.className = 'source-tab';
+                tab.textContent = source.name;
+                tab.dataset.sourceId = source.id;
+                
+                if (source.id === currentSource.id) {
+                    tab.classList.add('active');
+                }
+                
+                tab.addEventListener('click', () => {
+                    // 移除所有活动标签
+                    document.querySelectorAll('.source-tab').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    
+                    // 设置当前标签为活动
+                    tab.classList.add('active');
+                    
+                    // 更新当前源
+                    const sourceId = tab.dataset.sourceId;
+                    currentSource = sources.find(s => s.id === sourceId);
+                    
+                    // 更新源信息
+                    sourceInfo.textContent = `图片来源: ${currentSource.description}`;
+                    
+                    // 加载新的壁纸
+                    getRandomWallpaper();
+                });
+                
+                sourceTabs.appendChild(tab);
+            });
+        }
+        
+        // 获取随机壁纸
+        function getRandomWallpaper() {
+            // 显示加载状态
+            loadingIndicator.style.display = 'block';
+            wallpaperImg.style.display = 'none';
+            
+            // 创建一个随机参数以避免缓存
+            const timestamp = new Date().getTime();
+            const requestUrl = `${currentSource.url}?t=${timestamp}`; // 使用这个URL去请求
+            
+            // 设置图片源并添加加载事件
+            const tempImg = new Image();
+            tempImg.src = requestUrl;
+            tempImg.onload = function() {
+                // 图片加载完成后，隐藏加载指示器，显示图片
+                loadingIndicator.style.display = 'none';
+                wallpaperImg.style.display = 'block';
+                // wallpaperImg.src 设置为 tempImg.src，让浏览器处理可能的最终 URL
+                wallpaperImg.src = tempImg.src; 
+                // 但我们存储的是最初请求的 URL 用于下载
+                wallpaperImg.setAttribute('data-request-url', requestUrl); 
+                
+                // 将图片添加到最近图片列表 (使用 requestUrl)
+                recentImages.push(requestUrl);
+                if (recentImages.length > 5) {
+                    recentImages.shift(); // 保持最多5张图片
+                }
+                currentImageIndex = recentImages.length - 1;
+            };
+            
+            tempImg.onerror = function() {
+                // 图片加载出错时
+                loadingIndicator.textContent = '加载失败，请重试或更换壁纸源';
+                setTimeout(() => {
+                    loadingIndicator.textContent = '加载中';
+                }, 2000);
+            };
+        }
+        
+        // 显示全屏模式
+        function showFullscreen(imgSrc) {
+            // imgSrc 可能是解析后的 URL，但我们需要原始请求 URL
+            const requestUrl = wallpaperImg.getAttribute('data-request-url');
+            fullscreenImg.src = imgSrc; // 显示图片
+            // 为全屏保存按钮存储原始请求 URL
+            fullscreenImg.setAttribute('data-request-url', requestUrl || imgSrc);
+            fullscreenView.classList.add('active');
+            document.body.style.overflow = 'hidden'; // 防止背景滚动
+        }
+        
+        // 关闭全屏模式
+        function closeFullscreenView() {
+            fullscreenView.classList.remove('active');
+            document.body.style.overflow = ''; // 恢复滚动
+        }
+        
+        // 显示前一张图片
+        function showPrevImage() {
+            if (recentImages.length > 1 && currentImageIndex > 0) {
+                currentImageIndex--;
+                const requestUrl = recentImages[currentImageIndex]; // 获取存储的原始请求URL
+                fullscreenImg.src = requestUrl; // 使用原始请求URL尝试加载
+                fullscreenImg.setAttribute('data-request-url', requestUrl);
+            }
+        }
+        
+        // 显示下一张图片
+        function showNextImage() {
+            if (recentImages.length > 1 && currentImageIndex < recentImages.length - 1) {
+                currentImageIndex++;
+                const requestUrl = recentImages[currentImageIndex]; // 获取存储的原始请求URL
+                fullscreenImg.src = requestUrl; // 使用原始请求URL尝试加载
+                fullscreenImg.setAttribute('data-request-url', requestUrl);
+            } else {
+                // 如果是最后一张，获取一张新图片
+                getRandomWallpaper();
+                // getRandomWallpaper 会更新 wallpaperImg 和其 data-request-url
+                // 等待一小段时间让其加载，然后更新全屏视图
+                setTimeout(() => {
+                    const newRequestUrl = wallpaperImg.getAttribute('data-request-url');
+                    fullscreenImg.src = newRequestUrl || wallpaperImg.src; // 优先用请求URL
+                    fullscreenImg.setAttribute('data-request-url', newRequestUrl || wallpaperImg.src);
+                }, 500);
+            }
+        }
+        
+        // 创建源选择标签
+        createSourceTabs();
+        
+        // 第一次加载
+        getRandomWallpaper();
+        
+        // 刷新按钮点击事件
+        refreshBtn.addEventListener('click', getRandomWallpaper);
+        
+        // 点击图片查看全屏
+        wallpaperImg.addEventListener('click', () => {
+            showFullscreen(wallpaperImg.src);
+        });
+        
+        // 全屏按钮点击事件
+        fullscreenBtn.addEventListener('click', () => {
+            showFullscreen(wallpaperImg.src);
+        });
+        
+        // 关闭全屏事件
+        closeFullscreen.addEventListener('click', closeFullscreenView);
+        fullscreenView.addEventListener('click', (e) => {
+            if (e.target === fullscreenView) {
+                closeFullscreenView();
+            }
+        });
+        
+        // 上一张/下一张按钮事件
+        prevBtn.addEventListener('click', showPrevImage);
+        nextBtn.addEventListener('click', showNextImage);
+        
+        // 简化为直接触发下载链接的方法
+        function triggerDownloadLink(urlToRequest, filename) {
+            const a = document.createElement('a');
+            a.href = urlToRequest; // 使用最初请求API的URL
+            a.download = filename || 'anime-wallpaper-' + new Date().getTime() + '.jpg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // 下载按钮点击事件
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // 防止<a>标签的默认导航行为
+            const requestUrl = wallpaperImg.getAttribute('data-request-url');
+            if (requestUrl) {
+                triggerDownloadLink(requestUrl, 'anime-wallpaper-' + new Date().getTime() + '.jpg');
+            } else {
+                // Fallback: 如果没有获取到请求URL，尝试使用当前src
+                console.warn('未找到data-request-url，尝试使用当前src进行下载');
+                triggerDownloadLink(wallpaperImg.src, 'anime-wallpaper-' + new Date().getTime() + '.jpg');
+            }
+        });
+        
+        // 全屏下的保存按钮
+        saveBtn.addEventListener('click', () => {
+            const requestUrl = fullscreenImg.getAttribute('data-request-url');
+             if (requestUrl) {
+                triggerDownloadLink(requestUrl, 'anime-wallpaper-fullscreen-' + new Date().getTime() + '.jpg');
+            } else {
+                // Fallback
+                console.warn('未找到全屏图片的data-request-url，尝试使用当前src进行下载');
+                triggerDownloadLink(fullscreenImg.src, 'anime-wallpaper-fullscreen-' + new Date().getTime() + '.jpg');
+            }
+        });
+        
+        // 键盘事件
+        document.addEventListener('keydown', (e) => {
+            if (fullscreenView.classList.contains('active')) {
+                if (e.key === 'Escape') {
+                    closeFullscreenView();
+                } else if (e.key === 'ArrowLeft') {
+                    showPrevImage();
+                } else if (e.key === 'ArrowRight') {
+                    showNextImage();
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html> 

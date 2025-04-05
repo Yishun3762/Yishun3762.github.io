@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机抽签工具 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .decision-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        
+        .decision-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+        
+        .character-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 300px;
+            margin: 2rem auto;
+            overflow: hidden;
+            border-radius: 12px;
+            background: rgba(245, 245, 245, 0.8);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+        
+        .character-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            transition: all 0.5s ease;
+        }
+        
+        .character-speech {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            max-width: 80%;
+            text-align: center;
+            font-size: 1rem;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .character-speech.show {
+            opacity: 1;
+            animation: bounce 0.5s;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) translateY(0);}
+            40% {transform: translateX(-50%) translateY(-10px);}
+            60% {transform: translateX(-50%) translateY(-5px);}
+        }
+        
+        .decision-type {
+            background: rgba(245, 245, 245, 0.8);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .decision-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .text-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        
+        .options-container {
+            background: rgba(240, 248, 255, 0.8);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .option-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .option-item:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .option-input {
+            flex-grow: 1;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .option-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        
+        .option-remove {
+            background: none;
+            border: none;
+            color: #f44336;
+            cursor: pointer;
+            font-size: 1.2rem;
+            margin-left: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .option-remove:hover {
+            transform: scale(1.2);
+        }
+        
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e5e5e5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .option-add {
+            display: block;
+            margin: 1rem auto;
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 1px dashed var(--primary-color);
+        }
+        
+        .option-add:hover {
+            background-color: rgba(74, 144, 226, 0.1);
+        }
+        
+        .draw-animation {
+            margin: 2rem auto;
+            width: 100px;
+            height: 100px;
+            position: relative;
+            display: none;
+        }
+        
+        .draw-animation.active {
+            display: block;
+        }
+        
+        .draw-animation .circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--primary-color);
+            animation: spin 1.5s linear infinite;
+        }
+        
+        .draw-animation .circle:nth-child(2) {
+            border: 4px solid transparent;
+            border-bottom-color: var(--primary-color);
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-display {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            text-align: center;
+            display: none;
+        }
+        
+        .result-display.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .result-content {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(245, 245, 245, 0.8);
+            border-radius: 8px;
+        }
+        
+        .back-links {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            transform: translateX(5px);
+        }
+        
+        .back-link:before {
+            content: '←';
+            margin-right: 0.5rem;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab:hover {
+            color: var(--primary-color);
+        }
+        
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .character-container {
+                height: 250px;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>随机抽签工具喵～</h1>
+    <p>让二次元角色帮你做决定喵～解决选择困难症喵～</p>
+    
+    <div class="decision-container">
+        <div class="tabs">
+            <div class="tab active" data-tab="multiple-choice">多选一</div>
+            <div class="tab" data-tab="yes-no">是非题</div>
+            <div class="tab" data-tab="random-number">随机数</div>
+        </div>
+        
+        <!-- 多选一 -->
+        <div class="tab-content active" id="multiple-choice-tab">
+            <div class="decision-type">
+                <div class="decision-title">选项抉择喵～</div>
+                <div class="input-group">
+                    <label class="input-label">问题喵～</label>
+                    <input type="text" class="text-input" id="multi-question" placeholder="今天吃什么好呢？">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">选项喵～</label>
+                    <div class="options-container" id="options-container">
+                        <div class="option-item">
+                            <input type="text" class="option-input" placeholder="选项1" value="拉面">
+                            <button class="option-remove">×</button>
+                        </div>
+                        <div class="option-item">
+                            <input type="text" class="option-input" placeholder="选项2" value="寿司">
+                            <button class="option-remove">×</button>
+                        </div>
+                        <div class="option-item">
+                            <input type="text" class="option-input" placeholder="选项3" value="炒饭">
+                            <button class="option-remove">×</button>
+                        </div>
+                    </div>
+                    <button class="btn option-add" id="add-option">+ 添加选项</button>
+                </div>
+                
+                <button class="btn btn-primary" id="multi-draw">开始抽签喵～</button>
+            </div>
+        </div>
+        
+        <!-- 是非题 -->
+        <div class="tab-content" id="yes-no-tab">
+            <div class="decision-type">
+                <div class="decision-title">是非决定喵～</div>
+                <div class="input-group">
+                    <label class="input-label">问题喵～</label>
+                    <input type="text" class="text-input" id="yesno-question" placeholder="我今天应该出门吗？">
+                </div>
+                
+                <button class="btn btn-primary" id="yesno-draw">开始抽签喵～</button>
+            </div>
+        </div>
+        
+        <!-- 随机数 -->
+        <div class="tab-content" id="random-number-tab">
+            <div class="decision-type">
+                <div class="decision-title">随机数生成喵～</div>
+                <div class="input-group">
+                    <label class="input-label">范围喵～</label>
+                    <div style="display: flex; gap: 1rem;">
+                        <input type="number" class="text-input" id="min-number" placeholder="最小值" value="1">
+                        <span style="line-height: 2.8;">到</span>
+                        <input type="number" class="text-input" id="max-number" placeholder="最大值" value="100">
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" id="number-draw">生成随机数喵～</button>
+            </div>
+        </div>
+        
+        <!-- 抽签动画 -->
+        <div class="draw-animation" id="draw-animation">
+            <div class="circle"></div>
+            <div class="circle"></div>
+        </div>
+        
+        <!-- 角色显示 -->
+        <div class="character-container">
+            <img id="character-img" class="character-img" src="" alt="二次元角色" style="display: none;">
+            <div id="character-speech" class="character-speech"></div>
+        </div>
+        
+        <!-- 结果显示 -->
+        <div class="result-display" id="result-display">
+            <div class="result-title">抽签结果喵～</div>
+            <div class="result-content" id="result-content"></div>
+            <button class="btn btn-secondary" id="draw-again">再抽一次喵～</button>
+        </div>
+    </div>
+    
+    <div class="back-links">
+        <a href="toolbox.html" class="back-link">返回工具箱</a>
+        <a href="index.html" class="back-link">返回主页</a>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 标签切换功能
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+        
+        // 获取元素
+        const optionsContainer = document.getElementById('options-container');
+        const addOptionBtn = document.getElementById('add-option');
+        const multiDrawBtn = document.getElementById('multi-draw');
+        const yesnoDrawBtn = document.getElementById('yesno-draw');
+        const numberDrawBtn = document.getElementById('number-draw');
+        const drawAgainBtn = document.getElementById('draw-again');
+        const multiQuestion = document.getElementById('multi-question');
+        const yesnoQuestion = document.getElementById('yesno-question');
+        const minNumber = document.getElementById('min-number');
+        const maxNumber = document.getElementById('max-number');
+        const characterImg = document.getElementById('character-img');
+        const characterSpeech = document.getElementById('character-speech');
+        const drawAnimation = document.getElementById('draw-animation');
+        const resultDisplay = document.getElementById('result-display');
+        const resultContent = document.getElementById('result-content');
+        
+        // 角色数据
+        const characters = [
+            { name: "初音未来", img: "https://i.postimg.cc/Sxk11XSD/miku.png", phrases: ["我想想喵～", "让我来帮你决定喵～", "抽签结果是……", "希望这个结果让你满意喵～"] },
+            { name: "雷姆", img: "https://i.postimg.cc/VLzP0v9v/rem.png", phrases: ["雷姆来解答您的疑惑喵～", "让我帮您抽一张签喵～", "您的答案是……", "希望我的抽签能帮到您喵～"] },
+            { name: "兔田佩克拉", img: "https://i.postimg.cc/d3Mc2xG0/pekora.png", phrases: ["兔子兔子～", "让我抽一张签peko～", "答案是peko～", "兔田佩克拉的占卜很准的peko～"] },
+            { name: "阿库娅", img: "https://i.postimg.cc/VNgtjpTJ/aqua.png", phrases: ["阿库娅来啦喵～", "让我看看运势怎么样喵～", "嗯～答案是……", "这是女神的占卜喵～一定很准的！"] },
+            { name: "可莉", img: "https://i.postimg.cc/LXRkjYvL/klee.png", phrases: ["可莉来帮忙喵～", "炸弹炸出来的结果一定很准确喵～", "嘭！答案是……", "可莉的抽签很棒对吧喵～"] }
+        ];
+        
+        // 是非答案
+        const yesNoAnswers = [
+            "是喵～",
+            "不是喵～",
+            "当然是喵～",
+            "绝对不是喵～",
+            "大概是吧喵～",
+            "可能不是喵～",
+            "肯定是喵～",
+            "最好不要喵～",
+            "试一试喵～",
+            "还是算了喵～",
+            "非常推荐喵～",
+            "不太建议喵～"
+        ];
+        
+        // 添加选项
+        addOptionBtn.addEventListener('click', () => {
+            const optionItem = document.createElement('div');
+            optionItem.className = 'option-item';
+            optionItem.innerHTML = `
+                <input type="text" class="option-input" placeholder="新选项">
+                <button class="option-remove">×</button>
+            `;
+            
+            optionsContainer.appendChild(optionItem);
+            
+            // 添加删除按钮事件
+            const removeBtn = optionItem.querySelector('.option-remove');
+            removeBtn.addEventListener('click', () => {
+                optionItem.remove();
+            });
+        });
+        
+        // 为现有的选项添加删除功能
+        document.querySelectorAll('.option-remove').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 至少保留一个选项
+                if (optionsContainer.children.length > 1) {
+                    this.parentElement.remove();
+                } else {
+                    alert('至少需要保留一个选项喵～');
+                }
+            });
+        });
+        
+        // 多选一抽签
+        multiDrawBtn.addEventListener('click', () => {
+            // 获取所有选项
+            const options = [];
+            optionsContainer.querySelectorAll('.option-input').forEach(input => {
+                if (input.value.trim() !== '') {
+                    options.push(input.value.trim());
+                }
+            });
+            
+            if (options.length === 0) {
+                alert('请至少添加一个选项喵～');
+                return;
+            }
+            
+            // 获取问题
+            const question = multiQuestion.value.trim() || "你的问题";
+            
+            // 开始抽签动画
+            startDrawAnimation();
+            
+            setTimeout(() => {
+                // 随机选择一个角色和一个选项
+                const character = characters[Math.floor(Math.random() * characters.length)];
+                const selectedOption = options[Math.floor(Math.random() * options.length)];
+                
+                // 显示角色和结果
+                showResult(character, question, selectedOption);
+            }, 2000);
+        });
+        
+        // 是非题抽签
+        yesnoDrawBtn.addEventListener('click', () => {
+            // 获取问题
+            const question = yesnoQuestion.value.trim() || "你的问题";
+            
+            // 开始抽签动画
+            startDrawAnimation();
+            
+            setTimeout(() => {
+                // 随机选择一个角色和是非答案
+                const character = characters[Math.floor(Math.random() * characters.length)];
+                const answer = yesNoAnswers[Math.floor(Math.random() * yesNoAnswers.length)];
+                
+                // 显示角色和结果
+                showResult(character, question, answer);
+            }, 2000);
+        });
+        
+        // 随机数生成
+        numberDrawBtn.addEventListener('click', () => {
+            // 获取范围
+            const min = parseInt(minNumber.value) || 1;
+            const max = parseInt(maxNumber.value) || 100;
+            
+            if (min >= max) {
+                alert('最小值必须小于最大值喵～');
+                return;
+            }
+            
+            // 开始抽签动画
+            startDrawAnimation();
+            
+            setTimeout(() => {
+                // 随机选择一个角色和生成随机数
+                const character = characters[Math.floor(Math.random() * characters.length)];
+                const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+                
+                // 显示角色和结果
+                showResult(character, `在${min}到${max}之间抽取一个随机数`, randomNumber.toString());
+            }, 2000);
+        });
+        
+        // 再抽一次
+        drawAgainBtn.addEventListener('click', () => {
+            // 重置显示
+            resultDisplay.classList.remove('show');
+            characterImg.style.display = 'none';
+            characterSpeech.classList.remove('show');
+            characterSpeech.textContent = '';
+            
+            // 根据当前活动的标签，点击相应的抽签按钮
+            const activeTab = document.querySelector('.tab.active').dataset.tab;
+            if (activeTab === 'multiple-choice') {
+                multiDrawBtn.click();
+            } else if (activeTab === 'yes-no') {
+                yesnoDrawBtn.click();
+            } else if (activeTab === 'random-number') {
+                numberDrawBtn.click();
+            }
+        });
+        
+        // 开始抽签动画
+        function startDrawAnimation() {
+            // 隐藏之前的结果
+            resultDisplay.classList.remove('show');
+            characterImg.style.display = 'none';
+            characterSpeech.classList.remove('show');
+            characterSpeech.textContent = '';
+            
+            // 显示抽签动画
+            drawAnimation.classList.add('active');
+        }
+        
+        // 显示抽签结果
+        function showResult(character, question, answer) {
+            // 隐藏抽签动画
+            drawAnimation.classList.remove('active');
+            
+            // 显示角色图片
+            characterImg.src = character.img;
+            characterImg.alt = character.name;
+            characterImg.style.display = 'block';
+            
+            // 显示角色对话
+            characterSpeech.textContent = character.phrases[2];
+            characterSpeech.classList.add('show');
+            
+            // 延迟显示结果
+            setTimeout(() => {
+                resultContent.textContent = answer;
+                resultDisplay.classList.add('show');
+            }, 1000);
+        }
+    });
+</script>
+</body>
+</html> 

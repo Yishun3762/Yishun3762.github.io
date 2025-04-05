@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日语五十音图学习 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .japanese-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        
+        .japanese-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #ddd;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab:hover {
+            color: var(--primary-color);
+        }
+        
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .hiragana-grid, .katakana-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .kana-cell {
+            background: rgba(245, 245, 245, 0.8);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .kana-cell:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px var(--shadow-color);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .kana-char {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .kana-romaji {
+            font-size: 1rem;
+            color: #555;
+        }
+        
+        .kana-mnemonic {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(74, 144, 226, 0.9);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0 0 8px 8px;
+            font-size: 0.8rem;
+            transform: translateY(100%);
+            transition: all 0.3s ease;
+            opacity: 0;
+            z-index: 1;
+        }
+        
+        .kana-cell:hover .kana-mnemonic {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .practice-section {
+            margin-top: 2rem;
+            background: rgba(245, 245, 245, 0.8);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .practice-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .practice-card {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        .practice-char {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+        
+        .practice-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .practice-option {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .practice-option:hover {
+            background: #e5e5e5;
+        }
+        
+        .practice-option.correct {
+            background: #e6f7e9;
+            border-color: #4caf50;
+        }
+        
+        .practice-option.incorrect {
+            background: #fbe9e7;
+            border-color: #f44336;
+        }
+        
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            background-color: var(--primary-color);
+            color: white;
+            display: block;
+            margin: 1.5rem auto 0;
+        }
+        
+        .btn:hover {
+            background-color: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .back-links {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            transform: translateX(5px);
+        }
+        
+        .back-link:before {
+            content: '←';
+            margin-right: 0.5rem;
+        }
+        
+        .tips-section {
+            margin-top: 2rem;
+            background: rgba(240, 248, 255, 0.8);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .tips-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .tips-list {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+        }
+        
+        .tips-list li {
+            margin-bottom: 0.8rem;
+        }
+        
+        .audio-btn {
+            background: transparent;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.3rem;
+            transition: all 0.3s ease;
+        }
+        
+        .audio-btn:hover {
+            transform: scale(1.2);
+        }
+        
+        @media (max-width: 768px) {
+            .hiragana-grid, .katakana-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .practice-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>日语五十音图学习喵～</h1>
+    <p>轻松学习日语假名喵～附带发音和记忆技巧喵～</p>
+    
+    <div class="japanese-container">
+        <div class="tabs">
+            <div class="tab active" data-tab="hiragana">平假名</div>
+            <div class="tab" data-tab="katakana">片假名</div>
+            <div class="tab" data-tab="practice">练习模式</div>
+            <div class="tab" data-tab="tips">学习技巧</div>
+        </div>
+        
+        <!-- 平假名 -->
+        <div class="tab-content active" id="hiragana-tab">
+            <h2>平假名 (Hiragana)</h2>
+            <p>平假名是日语中最基础的文字之一，用于表示日语中的词汇、语法助词和音读喵～</p>
+            
+            <div class="hiragana-grid" id="hiragana-grid">
+                <!-- 平假名表会通过JavaScript动态生成 -->
+            </div>
+            
+            <p>点击假名可以听发音，将鼠标悬停在上面可以查看记忆技巧喵～</p>
+        </div>
+        
+        <!-- 片假名 -->
+        <div class="tab-content" id="katakana-tab">
+            <h2>片假名 (Katakana)</h2>
+            <p>片假名主要用于外来语、外国人名地名、拟声词和强调喵～</p>
+            
+            <div class="katakana-grid" id="katakana-grid">
+                <!-- 片假名表会通过JavaScript动态生成 -->
+            </div>
+            
+            <p>点击假名可以听发音，将鼠标悬停在上面可以查看记忆技巧喵～</p>
+        </div>
+        
+        <!-- 练习模式 -->
+        <div class="tab-content" id="practice-tab">
+            <h2>练习模式</h2>
+            <p>测试一下你对假名的认识程度喵～选择正确的读音喵～</p>
+            
+            <div class="practice-section">
+                <div class="practice-title">猜读音游戏喵～</div>
+                
+                <div class="practice-card">
+                    <div class="practice-char" id="practice-char">あ</div>
+                    <div class="practice-options" id="practice-options">
+                        <!-- 选项会通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <button class="btn" id="next-btn">下一题喵～</button>
+            </div>
+        </div>
+        
+        <!-- 学习技巧 -->
+        <div class="tab-content" id="tips-tab">
+            <h2>学习技巧</h2>
+            <p>这里有一些学习日语假名的有用技巧喵～</p>
+            
+            <div class="tips-section">
+                <div class="tips-title">入门技巧喵～</div>
+                <ul class="tips-list">
+                    <li>先学平假名，再学片假名，因为平假名使用频率更高喵～</li>
+                    <li>记忆时，把假名分成行（あ行、か行等）来学习，而不是一次学习全部喵～</li>
+                    <li>利用记忆术和形状联想帮助记忆，比如「あ」看起来像字母"a"喵～</li>
+                    <li>多写多练，写是最好的记忆方法喵～每天花10分钟练习书写喵～</li>
+                    <li>使用闪卡或手机App进行随时随地的复习喵～</li>
+                </ul>
+            </div>
+            
+            <div class="tips-section">
+                <div class="tips-title">发音技巧喵～</div>
+                <ul class="tips-list">
+                    <li>日语元音发音非常清晰，要注意"a"、"i"、"u"、"e"、"o"的发音区别喵～</li>
+                    <li>日语的"r"音不同于英语，更接近于舌尖轻轻拍打上颚喵～</li>
+                    <li>注意长音和短音的区别，长音要发两拍喵～</li>
+                    <li>跟着动漫或日语歌曲学习发音是很好的方法喵～</li>
+                </ul>
+            </div>
+            
+            <div class="tips-section">
+                <div class="tips-title">进阶学习喵～</div>
+                <ul class="tips-list">
+                    <li>熟悉假名后，开始学习简单的单词和短语喵～</li>
+                    <li>尝试阅读简单的日语材料，比如儿童读物或标有假名注音的漫画喵～</li>
+                    <li>找语言交换伙伴练习对话喵～</li>
+                    <li>坚持每天学习，即使只有15分钟也很有效喵～</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="back-links">
+        <a href="toolbox.html" class="back-link">返回工具箱</a>
+        <a href="index.html" class="back-link">返回主页</a>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 标签切换功能
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+        
+        // 平假名数据
+        const hiragana = [
+            { char: 'あ', romaji: 'a', mnemonic: '看起来像字母"a"的样子喵～' },
+            { char: 'い', romaji: 'i', mnemonic: '像一个小写的"i"，两个小点喵～' },
+            { char: 'う', romaji: 'u', mnemonic: '像一个嘴唇撅起来的"u"形状喵～' },
+            { char: 'え', romaji: 'e', mnemonic: '像一个向左倾斜的"e"喵～' },
+            { char: 'お', romaji: 'o', mnemonic: '像一个圆形的"o"喵～' },
+            { char: 'か', romaji: 'ka', mnemonic: '像一个"K"的简化形状喵～' },
+            { char: 'き', romaji: 'ki', mnemonic: '像一把钥匙(key)喵～' },
+            { char: 'く', romaji: 'ku', mnemonic: '像一个含着空气(kuu)的口喵～' },
+            { char: 'け', romaji: 'ke', mnemonic: '像打开的棒球手套准备接球喵～' },
+            { char: 'こ', romaji: 'ko', mnemonic: '像小孩子(ko)的身体喵～' },
+            { char: 'さ', romaji: 'sa', mnemonic: '像一把刀子(sword)喵～' },
+            { char: 'し', romaji: 'shi', mnemonic: '像一个海浪(sea)喵～' },
+            { char: 'す', romaji: 'su', mnemonic: '像一个数字"2"连着一个小勾喵～' },
+            { char: 'せ', romaji: 'se', mnemonic: '像一个坐(seat)的姿势喵～' },
+            { char: 'そ', romaji: 'so', mnemonic: '像一个弯曲的缝线(sew)喵～' },
+            { char: 'た', romaji: 'ta', mnemonic: '像一个打字机(type)的形状喵～' },
+            { char: 'ち', romaji: 'chi', mnemonic: '像小鸡(chick)的样子喵～' },
+            { char: 'つ', romaji: 'tsu', mnemonic: '像一个海浪的弯曲形状喵～' },
+            { char: 'て', romaji: 'te', mnemonic: '像一个手(te)的形状喵～' },
+            { char: 'と', romaji: 'to', mnemonic: '像一个尾巴(tail)喵～' },
+            { char: 'な', romaji: 'na', mnemonic: '像一个点上面有一条线，就像"na"喵～' },
+            { char: 'に', romaji: 'ni', mnemonic: '像一个数字"2"(two)，谐音"ni"喵～' },
+            { char: 'ぬ', romaji: 'nu', mnemonic: '像一个面条(noodle)喵～' },
+            { char: 'ね', romaji: 'ne', mnemonic: '像一个扭曲的弹簧(spring)喵～' },
+            { char: 'の', romaji: 'no', mnemonic: '像一个no符号喵～' },
+            { char: 'は', romaji: 'ha', mnemonic: '像一个小屋(house)的形状喵～' },
+            { char: 'ひ', romaji: 'hi', mnemonic: '像一个火柴(fire)的形状喵～' },
+            { char: 'ふ', romaji: 'fu', mnemonic: '像一个呼呼吹风(fu~)的形状喵～' },
+            { char: 'へ', romaji: 'he', mnemonic: '像一个正在爬(hike)山的人喵～' },
+            { char: 'ほ', romaji: 'ho', mnemonic: '像一个帆船(hoe)的形状喵～' },
+            { char: 'ま', romaji: 'ma', mnemonic: '像一个妈妈(mama)的头发和脸喵～' },
+            { char: 'み', romaji: 'mi', mnemonic: '像一个耳朵(ear)，谐音"mi"喵～' },
+            { char: 'む', romaji: 'mu', mnemonic: '像一个牛(moo)的头喵～' },
+            { char: 'め', romaji: 'me', mnemonic: '像一个眼睛(me)的形状喵～' },
+            { char: 'も', romaji: 'mo', mnemonic: '像一个猫咪(moggy)喵～' },
+            { char: 'や', romaji: 'ya', mnemonic: '像一个弯曲的弓箭(yari)喵～' },
+            { char: 'ゆ', romaji: 'yu', mnemonic: '像一个U型的管子，谐音"yu"喵～' },
+            { char: 'よ', romaji: 'yo', mnemonic: '像一个溜溜球(yo-yo)喵～' },
+            { char: 'ら', romaji: 'ra', mnemonic: '像一个喇叭(radio)的形状喵～' },
+            { char: 'り', romaji: 'ri', mnemonic: '像一个小溪(river)喵～' },
+            { char: 'る', romaji: 'ru', mnemonic: '像一个在跑圈(run)喵～' },
+            { char: 'れ', romaji: 're', mnemonic: '像一个铃铛(ring)的形状喵～' },
+            { char: 'ろ', romaji: 'ro', mnemonic: '像一个道路(road)的形状喵～' },
+            { char: 'わ', romaji: 'wa', mnemonic: '像一个碗(water)的形状喵～' },
+            { char: 'を', romaji: 'wo', mnemonic: '像一个歪歪扭扭的锦鲤鱼喵～' },
+            { char: 'ん', romaji: 'n', mnemonic: '像字母"n"的形状喵～' }
+        ];
+        
+        // 片假名数据
+        const katakana = [
+            { char: 'ア', romaji: 'a', mnemonic: '像一个字母"A"的简化形式喵～' },
+            { char: 'イ', romaji: 'i', mnemonic: '像两条斜线，如英文字母"I"喵～' },
+            { char: 'ウ', romaji: 'u', mnemonic: '像一个带有两个小臂的"U"形状喵～' },
+            { char: 'エ', romaji: 'e', mnemonic: '像一个手掌形状的"E"喵～' },
+            { char: 'オ', romaji: 'o', mnemonic: '像一个小丘和一条线，像"O"喵～' },
+            { char: 'カ', romaji: 'ka', mnemonic: '像一个开口的"K"喵～' },
+            { char: 'キ', romaji: 'ki', mnemonic: '像一个钥匙(key)的齿部分喵～' },
+            { char: 'ク', romaji: 'ku', mnemonic: '像一个有角度的"K"喵～' },
+            { char: 'ケ', romaji: 'ke', mnemonic: '像一个大写的"K"喵～' },
+            { char: 'コ', romaji: 'ko', mnemonic: '像两条平行线，像"co"的开头喵～' },
+            { char: 'サ', romaji: 'sa', mnemonic: '像一个萨克斯(sax)的形状喵～' },
+            { char: 'シ', romaji: 'shi', mnemonic: '像一个微笑的嘴(smile)喵～' },
+            { char: 'ス', romaji: 'su', mnemonic: '像一个"S"的变体喵～' },
+            { char: 'セ', romaji: 'se', mnemonic: '像"c"的形状喵～' },
+            { char: 'ソ', romaji: 'so', mnemonic: '像一个拉弦的弓，让人想到"sore"喵～' },
+            { char: 'タ', romaji: 'ta', mnemonic: '像一个大写的"T"的变体喵～' },
+            { char: 'チ', romaji: 'chi', mnemonic: '像一个"t"和"i"的组合喵～' },
+            { char: 'ツ', romaji: 'tsu', mnemonic: '像一排牙齿(tooth)喵～' },
+            { char: 'テ', romaji: 'te', mnemonic: '像"T"的一部分喵～' },
+            { char: 'ト', romaji: 'to', mnemonic: '像一个转弯的"7"喵～' },
+            { char: 'ナ', romaji: 'na', mnemonic: '像"na"的第一个字母加上一个小勾喵～' },
+            { char: 'ニ', romaji: 'ni', mnemonic: '像两根平行的针(needle)喵～' },
+            { char: 'ヌ', romaji: 'nu', mnemonic: '像一个点上面带曲线喵～' },
+            { char: 'ネ', romaji: 'ne', mnemonic: '像一个"Z"和"c"的组合喵～' },
+            { char: 'ノ', romaji: 'no', mnemonic: '像字母"J"的镜像喵～' },
+            { char: 'ハ', romaji: 'ha', mnemonic: '像楼梯(hall)的形状喵～' },
+            { char: 'ヒ', romaji: 'hi', mnemonic: '像一个人带着高帽子(hat)喵～' },
+            { char: 'フ', romaji: 'fu', mnemonic: '像一个风扇(fan)喵～' },
+            { char: 'ヘ', romaji: 'he', mnemonic: '像一个头盔(helmet)喵～' },
+            { char: 'ホ', romaji: 'ho', mnemonic: '像一个十字加星星，如圣诞装饰(holly)喵～' },
+            { char: 'マ', romaji: 'ma', mnemonic: '像一座山(mountain)喵～' },
+            { char: 'ミ', romaji: 'mi', mnemonic: '像三条平行线(three)，谐音"mi"喵～' },
+            { char: 'ム', romaji: 'mu', mnemonic: '像希腊字母μ(mu)喵～' },
+            { char: 'メ', romaji: 'me', mnemonic: '像一个X标记(mark)喵～' },
+            { char: 'モ', romaji: 'mo', mnemonic: '像一个"mo"的形状喵～' },
+            { char: 'ヤ', romaji: 'ya', mnemonic: '像一个哑铃(dumbbell)的形状喵～' },
+            { char: 'ユ', romaji: 'yu', mnemonic: '像一个U形的勺子(dipper)喵～' },
+            { char: 'ヨ', romaji: 'yo', mnemonic: '像一个用餐盘(yo-plate)喵～' },
+            { char: 'ラ', romaji: 'ra', mnemonic: '像一个"r"和"a"的组合喵～' },
+            { char: 'リ', romaji: 'ri', mnemonic: '像一个反转的"L"，谐音"ri"喵～' },
+            { char: 'ル', romaji: 'ru', mnemonic: '像一个小勺子的柄(handle)喵～' },
+            { char: 'レ', romaji: 're', mnemonic: '像一个反转的"L"喵～' },
+            { char: 'ロ', romaji: 'ro', mnemonic: '像一个方形的嘴(mouth)，谐音"ro"喵～' },
+            { char: 'ワ', romaji: 'wa', mnemonic: '像一个"W"的单侧喵～' },
+            { char: 'ヲ', romaji: 'wo', mnemonic: '像一个带有额外笔划的"W"喵～' },
+            { char: 'ン', romaji: 'n', mnemonic: '像一个长音符(～)喵～' }
+        ];
+        
+        // 生成平假名表格
+        const hiraganaGrid = document.getElementById('hiragana-grid');
+        hiragana.forEach(item => {
+            const cell = document.createElement('div');
+            cell.className = 'kana-cell';
+            cell.innerHTML = `
+                <div class="kana-char">${item.char}</div>
+                <div class="kana-romaji">${item.romaji}</div>
+                <div class="kana-mnemonic">${item.mnemonic}</div>
+                <button class="audio-btn" data-romaji="${item.romaji}">🔊</button>
+            `;
+            hiraganaGrid.appendChild(cell);
+        });
+        
+        // 生成片假名表格
+        const katakanaGrid = document.getElementById('katakana-grid');
+        katakana.forEach(item => {
+            const cell = document.createElement('div');
+            cell.className = 'kana-cell';
+            cell.innerHTML = `
+                <div class="kana-char">${item.char}</div>
+                <div class="kana-romaji">${item.romaji}</div>
+                <div class="kana-mnemonic">${item.mnemonic}</div>
+                <button class="audio-btn" data-romaji="${item.romaji}">🔊</button>
+            `;
+            katakanaGrid.appendChild(cell);
+        });
+        
+        // 发音功能（使用ResponsiveVoice.js或类似服务）
+        document.querySelectorAll('.audio-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // 这里可以添加实际的发音逻辑，目前只是一个演示
+                alert(`播放发音: ${btn.dataset.romaji} (实际功能需要集成语音API)`);
+            });
+        });
+        
+        // 练习模式
+        const practiceChar = document.getElementById('practice-char');
+        const practiceOptions = document.getElementById('practice-options');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // 合并平假名和片假名数据用于练习
+        const allKana = [...hiragana, ...katakana];
+        let currentKana = null;
+        
+        // 生成练习题
+        function generatePracticeQuestion() {
+            // 随机选择一个假名
+            currentKana = allKana[Math.floor(Math.random() * allKana.length)];
+            practiceChar.textContent = currentKana.char;
+            
+            // 清空选项
+            practiceOptions.innerHTML = '';
+            
+            // 生成正确选项和三个随机错误选项
+            const options = [currentKana.romaji];
+            
+            while (options.length < 4) {
+                const randomKana = allKana[Math.floor(Math.random() * allKana.length)];
+                if (!options.includes(randomKana.romaji)) {
+                    options.push(randomKana.romaji);
+                }
+            }
+            
+            // 打乱选项顺序
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+            
+            // 添加选项到DOM
+            options.forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'practice-option';
+                optionElement.textContent = option;
+                
+                optionElement.addEventListener('click', () => {
+                    // 清除之前的结果
+                    document.querySelectorAll('.practice-option').forEach(el => {
+                        el.classList.remove('correct', 'incorrect');
+                    });
+                    
+                    // 检查答案
+                    if (option === currentKana.romaji) {
+                        optionElement.classList.add('correct');
+                    } else {
+                        optionElement.classList.add('incorrect');
+                        // 显示正确答案
+                        document.querySelectorAll('.practice-option').forEach(el => {
+                            if (el.textContent === currentKana.romaji) {
+                                el.classList.add('correct');
+                            }
+                        });
+                    }
+                });
+                
+                practiceOptions.appendChild(optionElement);
+            });
+        }
+        
+        // 初始化第一个问题
+        generatePracticeQuestion();
+        
+        // 下一题按钮
+        nextBtn.addEventListener('click', generatePracticeQuestion);
+    });
+</script>
+</body>
+</html> 

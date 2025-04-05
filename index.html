@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asagi的后宫</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="music-player" id="musicPlayer">
+    <button class="toggle-player" onclick="togglePlayer()">♫</button>
+    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=450
+             src="//music.163.com/outchain/player?type=0&id=79510274&auto=1&height=430">
+    </iframe>
+</div>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+
+    <ul class="nav">
+        <li><a href="#home" class="active">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>Ciallo～(∠・ω< )⌒★</h1>
+    <p>欢迎你喵~这里已经好久没人来过了喵~咱喵好寂寞喵~</p>
+    <div id="random-text" class="random-text-box loading">加载中...</div>
+    <h3>点左边的按钮看小猫娘喵~</h3>
+    <p>背景图很好看对吧喵，我也觉得喵，伊莉雅和美游真是太可爱了喵</p>
+    <button id="change-bgpic">不好看，我就要换一张</button>
+</div>
+
+<script src="script.js"></script>
+<script>
+    // 为当前页面的导航项添加active类
+    document.addEventListener('DOMContentLoaded', () => {
+        const navLinks = document.querySelectorAll('.nav a');
+        navLinks.forEach(link => {
+            if ((link.getAttribute('href') === '#home' && window.location.pathname.endsWith('index.html')) || 
+                window.location.pathname.endsWith(link.getAttribute('href'))) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
+</body>
+</html>

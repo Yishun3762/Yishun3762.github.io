@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易记事本 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .notepad-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        
+        .notepad-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+
+        #notepad-area {
+            width: 100%;
+            height: 60vh; /* Adjust height as needed */
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            font-family: sans-serif; /* Use a common sans-serif font */
+            line-height: 1.6;
+            resize: vertical;
+            background-color: white;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        
+        #notepad-area:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .status-indicator {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+            text-align: right;
+            height: 1.2em; /* Reserve space */
+        }
+
+        .btn-clear {
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            background-color: #f44336; /* Red for clear/delete */
+            color: white;
+        }
+        
+        .btn-clear:hover {
+            background-color: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .back-links {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            transform: translateX(-3px);
+        }
+        
+        .back-link:before {
+            content: '←';
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>简易记事本喵～</h1>
+    <p>在这里随手记录你的想法或笔记喵～内容会自动保存在你的浏览器里喵～</p>
+    
+    <div class="notepad-container">
+        <textarea id="notepad-area" placeholder="开始输入笔记喵..."></textarea>
+        <div class="status-indicator" id="status-indicator"></div>
+        <button id="clear-btn" class="btn-clear">清空笔记喵～</button>
+    </div>
+    
+    <div class="back-links">
+        <a href="toolbox.html" class="back-link">返回工具箱</a>
+        <a href="index.html" class="back-link">返回主页</a>
+    </div>
+</div>
+
+<script src="script.js"></script> <!-- Include if you have common scripts -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const notepadArea = document.getElementById('notepad-area');
+        const statusIndicator = document.getElementById('status-indicator');
+        const clearBtn = document.getElementById('clear-btn');
+        const storageKey = 'simpleNotepadContent';
+        let saveTimeout;
+
+        // Load saved content from localStorage
+        const savedContent = localStorage.getItem(storageKey);
+        if (savedContent) {
+            notepadArea.value = savedContent;
+        }
+
+        // Function to save content to localStorage with status update
+        function saveContent() {
+            localStorage.setItem(storageKey, notepadArea.value);
+            statusIndicator.textContent = '已保存喵～';
+            // Clear status message after a short delay
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                statusIndicator.textContent = '';
+            }, 2000); 
+        }
+
+        // Save content when user stops typing (debounced)
+        let debounceTimeout;
+        notepadArea.addEventListener('input', () => {
+            statusIndicator.textContent = '正在输入...';
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(saveContent, 500); // Save 500ms after last input
+        });
+
+        // Clear notepad content and localStorage
+        clearBtn.addEventListener('click', () => {
+            if (confirm('确定要清空所有笔记喵？这个操作无法撤销喵～')) {
+                notepadArea.value = '';
+                localStorage.removeItem(storageKey);
+                statusIndicator.textContent = '笔记已清空喵～';
+                 clearTimeout(saveTimeout);
+                 saveTimeout = setTimeout(() => {
+                    statusIndicator.textContent = '';
+                }, 2000); 
+            }
+        });
+    });
+</script>
+</body>
+</html> 

@@ -434,14 +434,11 @@
             <div class="circle"></div>
         </div>
         
-        <!-- 角色显示 -->
-        <div class="character-container">
-            <img id="character-img" class="character-img" src="" alt="二次元角色" style="display: none;">
-            <div id="character-speech" class="character-speech"></div>
-        </div>
-        
-        <!-- 结果显示 -->
+        <!-- 结果和对话显示 -->
         <div class="result-display" id="result-display">
+             <!-- 对话气泡 -->
+             <div id="character-speech" class="character-speech"></div>
+             <!-- 结果 -->
             <div class="result-title">抽签结果喵～</div>
             <div class="result-content" id="result-content"></div>
             <button class="btn btn-secondary" id="draw-again">再抽一次喵～</button>
@@ -482,38 +479,68 @@
         const yesnoQuestion = document.getElementById('yesno-question');
         const minNumber = document.getElementById('min-number');
         const maxNumber = document.getElementById('max-number');
-        const characterImg = document.getElementById('character-img');
         const characterSpeech = document.getElementById('character-speech');
         const drawAnimation = document.getElementById('draw-animation');
         const resultDisplay = document.getElementById('result-display');
         const resultContent = document.getElementById('result-content');
         
-        // 角色数据
-        const characters = [
-            { name: "初音未来", img: "https://i.postimg.cc/Sxk11XSD/miku.png", phrases: ["我想想喵～", "让我来帮你决定喵～", "抽签结果是……", "希望这个结果让你满意喵～"] },
-            { name: "雷姆", img: "https://i.postimg.cc/VLzP0v9v/rem.png", phrases: ["雷姆来解答您的疑惑喵～", "让我帮您抽一张签喵～", "您的答案是……", "希望我的抽签能帮到您喵～"] },
-            { name: "兔田佩克拉", img: "https://i.postimg.cc/d3Mc2xG0/pekora.png", phrases: ["兔子兔子～", "让我抽一张签peko～", "答案是peko～", "兔田佩克拉的占卜很准的peko～"] },
-            { name: "阿库娅", img: "https://i.postimg.cc/VNgtjpTJ/aqua.png", phrases: ["阿库娅来啦喵～", "让我看看运势怎么样喵～", "嗯～答案是……", "这是女神的占卜喵～一定很准的！"] },
-            { name: "可莉", img: "https://i.postimg.cc/LXRkjYvL/klee.png", phrases: ["可莉来帮忙喵～", "炸弹炸出来的结果一定很准确喵～", "嘭！答案是……", "可莉的抽签很棒对吧喵～"] }
+        // 通用台词 (保留)
+        const genericPhrases = [
+             "让我看看喵～", 
+             "决定就是这个了喵！", 
+             "抽签结果出来啦～", 
+             "喵～帮你选好啦！",
+             "嗯哼，答案是这个喵～",
+             "就这样决定了喵！"
         ];
         
-        // 是非答案
+        // 重新添加是非题答案
         const yesNoAnswers = [
-            "是喵～",
-            "不是喵～",
-            "当然是喵～",
-            "绝对不是喵～",
-            "大概是吧喵～",
-            "可能不是喵～",
-            "肯定是喵～",
-            "最好不要喵～",
-            "试一试喵～",
-            "还是算了喵～",
-            "非常推荐喵～",
-            "不太建议喵～"
+            "是喵～", "不是喵～", "必须是喵！", "绝对不是喵～", 
+            "很有可能喵～", "不太可能喵～", "大胆地去做吧喵！", "最好三思而后行喵～"
         ];
+
+        // --- Helper Functions ---
+        function getRandomElement(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
         
-        // 添加选项
+        // 抽签函数 (所有类型共用) - 移除图片逻辑
+        async function performDraw(decisionFunction) {
+            characterSpeech.classList.remove('show');
+            resultDisplay.classList.remove('show');
+            drawAnimation.classList.add('active');
+            // 移除图片相关隐藏和清空
+            // characterImg.style.display = 'none'; 
+            // characterImg.src = '';
+            
+            try {
+                // 只等待动画效果 (例如 1.5 秒)
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // 执行具体的决策逻辑
+                const result = decisionFunction();
+                
+                // 显示结果和对话
+                resultContent.textContent = result;
+                characterSpeech.textContent = getRandomElement(genericPhrases);
+                
+                drawAnimation.classList.remove('active');
+                resultDisplay.classList.add('show');
+                characterSpeech.classList.add('show'); // 对话与结果一起显示
+                
+            } catch (error) {
+                 // 如果决策函数本身出错
+                 console.error('执行抽签时出错喵:', error);
+                 drawAnimation.classList.remove('active');
+                 resultContent.textContent = "抽签出错了喵...";
+                 characterSpeech.textContent = "呜... 好像哪里不对喵...";
+                 resultDisplay.classList.add('show');
+                 characterSpeech.classList.add('show');
+            }
+        }
+
+        // --- 多选一逻辑 ---
         addOptionBtn.addEventListener('click', () => {
             const optionItem = document.createElement('div');
             optionItem.className = 'option-item';
@@ -562,16 +589,12 @@
             const question = multiQuestion.value.trim() || "你的问题";
             
             // 开始抽签动画
-            startDrawAnimation();
-            
-            setTimeout(() => {
-                // 随机选择一个角色和一个选项
-                const character = characters[Math.floor(Math.random() * characters.length)];
+            performDraw(() => {
+                // 随机选择一个选项
                 const selectedOption = options[Math.floor(Math.random() * options.length)];
-                
-                // 显示角色和结果
-                showResult(character, question, selectedOption);
-            }, 2000);
+                // 返回不包含角色名的结果
+                return `抽签结果是：${selectedOption}`;
+            });
         });
         
         // 是非题抽签
@@ -580,16 +603,12 @@
             const question = yesnoQuestion.value.trim() || "你的问题";
             
             // 开始抽签动画
-            startDrawAnimation();
-            
-            setTimeout(() => {
-                // 随机选择一个角色和是非答案
-                const character = characters[Math.floor(Math.random() * characters.length)];
+            performDraw(() => {
+                // 随机选择是非答案
                 const answer = yesNoAnswers[Math.floor(Math.random() * yesNoAnswers.length)];
-                
-                // 显示角色和结果
-                showResult(character, question, answer);
-            }, 2000);
+                 // 返回不包含角色名的结果
+                return `关于"${question}"，抽签结果是：${answer}`;
+            });
         });
         
         // 随机数生成
@@ -604,27 +623,20 @@
             }
             
             // 开始抽签动画
-            startDrawAnimation();
-            
-            setTimeout(() => {
-                // 随机选择一个角色和生成随机数
-                const character = characters[Math.floor(Math.random() * characters.length)];
+            performDraw(() => {
+                // 生成随机数
                 const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-                
-                // 显示角色和结果
-                showResult(character, `在${min}到${max}之间抽取一个随机数`, randomNumber.toString());
-            }, 2000);
+                // 返回不包含角色名的结果
+                return `在 ${min} 到 ${max} 之间抽取的随机数是：${randomNumber}`;
+            });
         });
         
-        // 再抽一次
+        // 再抽一次 (移除图片重置)
         drawAgainBtn.addEventListener('click', () => {
-            // 重置显示
             resultDisplay.classList.remove('show');
-            characterImg.style.display = 'none';
             characterSpeech.classList.remove('show');
-            characterSpeech.textContent = '';
+            // characterImg.style.display = 'none'; // No longer needed
             
-            // 根据当前活动的标签，点击相应的抽签按钮
             const activeTab = document.querySelector('.tab.active').dataset.tab;
             if (activeTab === 'multiple-choice') {
                 multiDrawBtn.click();
@@ -634,39 +646,6 @@
                 numberDrawBtn.click();
             }
         });
-        
-        // 开始抽签动画
-        function startDrawAnimation() {
-            // 隐藏之前的结果
-            resultDisplay.classList.remove('show');
-            characterImg.style.display = 'none';
-            characterSpeech.classList.remove('show');
-            characterSpeech.textContent = '';
-            
-            // 显示抽签动画
-            drawAnimation.classList.add('active');
-        }
-        
-        // 显示抽签结果
-        function showResult(character, question, answer) {
-            // 隐藏抽签动画
-            drawAnimation.classList.remove('active');
-            
-            // 显示角色图片
-            characterImg.src = character.img;
-            characterImg.alt = character.name;
-            characterImg.style.display = 'block';
-            
-            // 显示角色对话
-            characterSpeech.textContent = character.phrases[2];
-            characterSpeech.classList.add('show');
-            
-            // 延迟显示结果
-            setTimeout(() => {
-                resultContent.textContent = answer;
-                resultDisplay.classList.add('show');
-            }, 1000);
-        }
     });
 </script>
 </body>

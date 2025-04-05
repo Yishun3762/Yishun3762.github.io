@@ -347,20 +347,11 @@
         const wealthStar = document.getElementById('wealthStar');
         const studyStar = document.getElementById('studyStar');
         
-        // 二次元角色列表
-        const characters = [
-            { name: "初音未来", img: "https://i.postimg.cc/Sxk11XSD/miku.png" },
-            { name: "雷姆", img: "https://i.postimg.cc/VLzP0v9v/rem.png" },
-            { name: "兔田佩克拉", img: "https://i.postimg.cc/d3Mc2xG0/pekora.png" },
-            { name: "阿库娅", img: "https://i.postimg.cc/VNgtjpTJ/aqua.png" },
-            { name: "琪亚娜·卡斯兰娜", img: "https://i.postimg.cc/qRchZfGN/kiana.png" },
-            { name: "雷电芽衣", img: "https://i.postimg.cc/q7c2KtVT/mei.png" },
-            { name: "宁宁", img: "https://i.postimg.cc/q7fLWTx9/nene.png" },
-            { name: "爱莉希雅", img: "https://i.postimg.cc/85hDxJx5/elysia.png" },
-            { name: "可莉", img: "https://i.postimg.cc/LXRkjYvL/klee.png" },
-            { name: "甘雨", img: "https://i.postimg.cc/nhTWzGK7/ganyu.png" }
-        ];
-        
+        // 固定的角色名
+        const characterName = "星罗";
+        // 图片API
+        const imageApiUrl = "https://www.dmoe.cc/random.php";
+
         // 运势列表
         const fortunes = [
             { level: "大吉", desc: "今天是非常幸运的一天喵！所有事情都会朝着好的方向发展喵～充满惊喜与机遇的一天喵～", quote: "幸福不会被动地等来，而是要主动去发现和创造喵～" },
@@ -372,33 +363,41 @@
             { level: "大凶", desc: "今天运势不太好喵～可能会遇到一些挫折喵～但不要灰心，这只是暂时的喵～", quote: "人生不如意十之八九，保持乐观心态才能转运喵～" }
         ];
         
-        // 随机生成运势
-        function generateFortune() {
-            // 显示占卜动画
-            fortuneAnimation.classList.add('active');
-            fortuneResult.classList.remove('show');
-            characterImg.style.display = 'none';
+        // 显示占卜动画
+        fortuneAnimation.classList.add('active');
+        fortuneResult.classList.remove('show');
+        characterImg.style.display = 'none'; // Hide image initially
+        characterImg.src = ''; // Clear previous image src
+        
+        // 异步加载图片和生成运势
+        async function performDivination() {
+            // 加载随机图片
+            const timestamp = new Date().getTime(); // Add timestamp to prevent caching
+            const randomImageUrl = `${imageApiUrl}?t=${timestamp}`;
             
-            // 模拟占卜过程
-            setTimeout(() => {
-                // 随机选择角色
-                const character = characters[Math.floor(Math.random() * characters.length)];
-                
-                // 随机选择运势
+            try {
+                // Preload the image to ensure it loads before showing results
+                await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = randomImageUrl;
+                    characterImg.src = randomImageUrl; // Set src to start loading
+                });
+                characterImg.alt = characterName;
+                characterImg.style.display = 'block'; // Show image after loaded
+
+                // 随机选择运势 (这部分逻辑不变)
                 const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
                 
-                // 生成各项运势分数
+                // 生成各项运势分数 (这部分逻辑不变)
                 const loveScore = Math.floor(Math.random() * 100) + 1;
                 const wealthScore = Math.floor(Math.random() * 100) + 1;
                 const studyScore = Math.floor(Math.random() * 100) + 1;
                 
                 // 更新DOM
-                characterImg.src = character.img;
-                characterImg.alt = character.name;
-                
                 const userName = nameInput.value.trim() || "你";
-                
-                fortuneHeader.textContent = `${character.name}为${userName}占卜的结果是：${fortune.level}`;
+                fortuneHeader.textContent = `${characterName}为${userName}占卜的结果是：${fortune.level}`;
                 fortuneContent.textContent = fortune.desc;
                 fortuneQuote.textContent = fortune.quote;
                 
@@ -406,21 +405,44 @@
                 wealthValue.textContent = wealthScore;
                 studyValue.textContent = studyScore;
                 
-                // 根据分数显示星星
+                // 根据分数显示星星 (这部分逻辑不变)
                 loveStar.textContent = getStars(loveScore);
                 wealthStar.textContent = getStars(wealthScore);
                 studyStar.textContent = getStars(studyScore);
                 
                 // 隐藏占卜动画，显示结果
                 fortuneAnimation.classList.remove('active');
-                characterImg.style.display = 'block';
                 
                 // 添加延迟以创建更好的视觉效果
                 setTimeout(() => {
                     fortuneResult.classList.add('show');
                 }, 300);
-                
-            }, 2000); // 占卜动画持续2秒
+
+            } catch (error) {
+                console.error('加载占卜图片失败喵:', error);
+                // Handle image loading error (e.g., show a default image or message)
+                fortuneHeader.textContent = `加载图片失败，但${characterName}还是为你占卜了喵～`;
+                characterImg.style.display = 'none'; // Hide broken image area
+                fortuneAnimation.classList.remove('active');
+                // Still show fortune text even if image fails
+                 const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+                 const loveScore = Math.floor(Math.random() * 100) + 1;
+                 const wealthScore = Math.floor(Math.random() * 100) + 1;
+                 const studyScore = Math.floor(Math.random() * 100) + 1;
+                 const userName = nameInput.value.trim() || "你";
+                 fortuneHeader.textContent = `${characterName}为${userName}占卜的结果是：${fortune.level} (图片加载失败了喵...)`;
+                 fortuneContent.textContent = fortune.desc;
+                 fortuneQuote.textContent = fortune.quote;
+                 loveValue.textContent = loveScore;
+                 wealthValue.textContent = wealthScore;
+                 studyValue.textContent = studyScore;
+                 loveStar.textContent = getStars(loveScore);
+                 wealthStar.textContent = getStars(wealthScore);
+                 studyStar.textContent = getStars(studyScore);
+                 setTimeout(() => {
+                    fortuneResult.classList.add('show');
+                }, 300);
+            }
         }
         
         // 根据分数返回星星显示
@@ -434,7 +456,7 @@
         }
         
         // 点击占卜按钮
-        fortuneBtn.addEventListener('click', generateFortune);
+        fortuneBtn.addEventListener('click', performDivination);
     });
 </script>
 </body>

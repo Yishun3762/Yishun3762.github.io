@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件批量重命名 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .rename-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(74, 111, 165, 0.05);
+        }
+
+        .upload-area.active {
+            border-color: var(--primary-color);
+            background-color: rgba(74, 111, 165, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .file-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-name {
+            flex-grow: 1;
+            margin-right: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .preview-name {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .file-remove {
+            color: #ff5252;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 18px;
+        }
+
+        .rename-options {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+
+        .option-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .option-group {
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        .option-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .option-group input[type="text"],
+        .option-group input[type="number"],
+        .option-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .back-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+
+        .back-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .preview-btn {
+            margin-top: 10px;
+        }
+
+        .instruction-text {
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .info-box {
+            background-color: #e9f5ff;
+            border-left: 4px solid var(--primary-color);
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+
+        .info-box p {
+            margin: 0;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>文件批量重命名喵～</h1>
+    <p>轻松批量重命名多个文件喵～可以添加前后缀、序号、替换文字等喵～</p>
+    
+    <div class="rename-container">
+        <div class="info-box">
+            <h4>使用说明喵～</h4>
+            <p>1. 将文件拖入上传区或点击选择文件喵～</p>
+            <p>2. 设置重命名规则喵～</p>
+            <p>3. 点击"预览命名结果"查看效果喵～</p>
+            <p>4. 满意后点击"下载重命名后的文件"喵～</p>
+            <p><strong>注意：</strong>此工具不会修改原始文件喵～下载的是重命名后的文件副本喵～</p>
+        </div>
+        
+        <div class="upload-area" id="upload-area">
+            <div class="upload-icon">📁</div>
+            <h3>拖放文件到这里喵～</h3>
+            <p>或者点击这里选择文件喵～</p>
+            <input type="file" id="file-input" multiple style="display: none;">
+        </div>
+        
+        <div id="file-list" class="file-list" style="display: none;">
+            <!-- 文件列表将在这里动态生成 -->
+        </div>
+        
+        <div class="rename-options" id="rename-options" style="display: none;">
+            <h3>重命名选项喵～</h3>
+            
+            <div class="option-row">
+                <div class="option-group">
+                    <label for="rename-pattern">重命名模式喵～</label>
+                    <select id="rename-pattern">
+                        <option value="prefix">添加前缀</option>
+                        <option value="suffix">添加后缀</option>
+                        <option value="replace">替换文字</option>
+                        <option value="sequence">添加序号</option>
+                        <option value="custom">自定义模式</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="pattern-options">
+                <!-- 根据选择的模式动态显示选项 -->
+                <div id="prefix-options" class="option-row">
+                    <div class="option-group">
+                        <label for="prefix-text">前缀喵～</label>
+                        <input type="text" id="prefix-text" placeholder="输入要添加的前缀喵～">
+                    </div>
+                </div>
+                
+                <div id="suffix-options" class="option-row" style="display: none;">
+                    <div class="option-group">
+                        <label for="suffix-text">后缀喵～</label>
+                        <input type="text" id="suffix-text" placeholder="输入要添加的后缀喵～">
+                    </div>
+                    <div class="option-group">
+                        <label for="suffix-position">添加位置喵～</label>
+                        <select id="suffix-position">
+                            <option value="beforeExt">在扩展名前</option>
+                            <option value="afterExt">在扩展名后</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="replace-options" class="option-row" style="display: none;">
+                    <div class="option-group">
+                        <label for="search-text">查找文字喵～</label>
+                        <input type="text" id="search-text" placeholder="要替换的文字喵～">
+                    </div>
+                    <div class="option-group">
+                        <label for="replace-text">替换为喵～</label>
+                        <input type="text" id="replace-text" placeholder="替换后的文字喵～">
+                    </div>
+                </div>
+                
+                <div id="sequence-options" class="option-row" style="display: none;">
+                    <div class="option-group">
+                        <label for="sequence-prefix">序号前缀喵～</label>
+                        <input type="text" id="sequence-prefix" placeholder="序号前的文字喵～">
+                    </div>
+                    <div class="option-group">
+                        <label for="sequence-start">起始数字喵～</label>
+                        <input type="number" id="sequence-start" value="1" min="0">
+                    </div>
+                    <div class="option-group">
+                        <label for="sequence-digits">序号位数喵～</label>
+                        <input type="number" id="sequence-digits" value="2" min="1" max="5">
+                    </div>
+                    <div class="option-group">
+                        <label for="sequence-position">序号位置喵～</label>
+                        <select id="sequence-position">
+                            <option value="prefix">文件名前</option>
+                            <option value="suffix">文件名后</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="custom-options" class="option-row" style="display: none;">
+                    <div class="option-group">
+                        <label for="custom-pattern">自定义模式喵～</label>
+                        <input type="text" id="custom-pattern" placeholder="例如: {name}_{num}">
+                    </div>
+                    <div class="instruction-text">
+                        可用的占位符喵～:<br>
+                        {name} - 原文件名<br>
+                        {ext} - 文件扩展名<br>
+                        {num} - 序号<br>
+                        {date} - 当前日期
+                    </div>
+                </div>
+            </div>
+            
+            <button id="preview-btn" class="btn preview-btn">预览命名结果喵～</button>
+        </div>
+        
+        <div class="buttons-container">
+            <button id="download-btn" class="btn" disabled>下载重命名后的文件喵～</button>
+            <button id="clear-btn" class="btn btn-secondary">清空所有文件喵～</button>
+        </div>
+    </div>
+    
+    <div class="back-links">
+        <a href="toolbox.html" class="back-link">返回工具箱</a>
+        <a href="index.html" class="back-link">返回主页</a>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 获取DOM元素
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+        const renameOptions = document.getElementById('rename-options');
+        const previewBtn = document.getElementById('preview-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        
+        // 重命名模式相关元素
+        const renamePattern = document.getElementById('rename-pattern');
+        const prefixOptions = document.getElementById('prefix-options');
+        const suffixOptions = document.getElementById('suffix-options');
+        const replaceOptions = document.getElementById('replace-options');
+        const sequenceOptions = document.getElementById('sequence-options');
+        const customOptions = document.getElementById('custom-options');
+        
+        // 存储上传的文件
+        let uploadedFiles = [];
+        
+        // 点击上传区域触发文件选择
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // 监听文件选择
+        fileInput.addEventListener('change', () => {
+            handleFiles(fileInput.files);
+        });
+        
+        // 拖放文件处理
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('active');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('active');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('active');
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        // 处理上传的文件
+        function handleFiles(files) {
+            if (files.length > 0) {
+                // 转换FileList为数组并存储
+                Array.from(files).forEach(file => {
+                    // 检查文件是否已存在
+                    const isDuplicate = uploadedFiles.some(existingFile => 
+                        existingFile.name === file.name && 
+                        existingFile.size === file.size &&
+                        existingFile.lastModified === file.lastModified
+                    );
+                    
+                    if (!isDuplicate) {
+                        uploadedFiles.push(file);
+                    }
+                });
+                
+                // 显示文件列表和重命名选项
+                renderFileList();
+                renameOptions.style.display = 'block';
+            }
+        }
+        
+        // 渲染文件列表
+        function renderFileList() {
+            fileList.innerHTML = '';
+            
+            if (uploadedFiles.length > 0) {
+                fileList.style.display = 'block';
+                
+                uploadedFiles.forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    
+                    const fileName = document.createElement('div');
+                    fileName.className = 'file-name';
+                    fileName.textContent = file.name;
+                    
+                    const previewName = document.createElement('div');
+                    previewName.className = 'preview-name';
+                    previewName.textContent = ''; // 预览名称将在预览时填充
+                    previewName.style.display = 'none';
+                    
+                    const removeBtn = document.createElement('div');
+                    removeBtn.className = 'file-remove';
+                    removeBtn.textContent = '×';
+                    removeBtn.addEventListener('click', () => {
+                        uploadedFiles.splice(index, 1);
+                        renderFileList();
+                        if (uploadedFiles.length === 0) {
+                            fileList.style.display = 'none';
+                            renameOptions.style.display = 'none';
+                            downloadBtn.disabled = true;
+                        }
+                    });
+                    
+                    fileItem.appendChild(fileName);
+                    fileItem.appendChild(previewName);
+                    fileItem.appendChild(removeBtn);
+                    fileList.appendChild(fileItem);
+                });
+            } else {
+                fileList.style.display = 'none';
+                downloadBtn.disabled = true;
+            }
+        }
+        
+        // 根据重命名模式显示相应选项
+        renamePattern.addEventListener('change', () => {
+            prefixOptions.style.display = 'none';
+            suffixOptions.style.display = 'none';
+            replaceOptions.style.display = 'none';
+            sequenceOptions.style.display = 'none';
+            customOptions.style.display = 'none';
+            
+            switch (renamePattern.value) {
+                case 'prefix':
+                    prefixOptions.style.display = 'flex';
+                    break;
+                case 'suffix':
+                    suffixOptions.style.display = 'flex';
+                    break;
+                case 'replace':
+                    replaceOptions.style.display = 'flex';
+                    break;
+                case 'sequence':
+                    sequenceOptions.style.display = 'flex';
+                    break;
+                case 'custom':
+                    customOptions.style.display = 'flex';
+                    break;
+            }
+        });
+        
+        // 预览重命名结果
+        previewBtn.addEventListener('click', () => {
+            if (uploadedFiles.length === 0) {
+                alert('请先上传文件喵～');
+                return;
+            }
+            
+            const fileItems = fileList.querySelectorAll('.file-item');
+            
+            uploadedFiles.forEach((file, index) => {
+                const newName = generateNewName(file, index);
+                
+                // 显示预览名称
+                const previewName = fileItems[index].querySelector('.preview-name');
+                previewName.textContent = newName;
+                previewName.style.display = 'block';
+            });
+            
+            // 启用下载按钮
+            downloadBtn.disabled = false;
+        });
+        
+        // 生成新文件名
+        function generateNewName(file, index) {
+            const fileName = file.name;
+            const lastDotIndex = fileName.lastIndexOf('.');
+            const nameWithoutExt = lastDotIndex !== -1 ? fileName.substring(0, lastDotIndex) : fileName;
+            const extension = lastDotIndex !== -1 ? fileName.substring(lastDotIndex) : '';
+            
+            let newName = '';
+            
+            switch (renamePattern.value) {
+                case 'prefix':
+                    const prefix = document.getElementById('prefix-text').value || '';
+                    newName = prefix + fileName;
+                    break;
+                    
+                case 'suffix':
+                    const suffix = document.getElementById('suffix-text').value || '';
+                    const suffixPosition = document.getElementById('suffix-position').value;
+                    
+                    if (suffixPosition === 'beforeExt') {
+                        newName = nameWithoutExt + suffix + extension;
+                    } else {
+                        newName = fileName + suffix;
+                    }
+                    break;
+                    
+                case 'replace':
+                    const searchText = document.getElementById('search-text').value || '';
+                    const replaceText = document.getElementById('replace-text').value || '';
+                    
+                    if (searchText) {
+                        newName = fileName.replace(new RegExp(escapeRegExp(searchText), 'g'), replaceText);
+                    } else {
+                        newName = fileName;
+                    }
+                    break;
+                    
+                case 'sequence':
+                    const seqPrefix = document.getElementById('sequence-prefix').value || '';
+                    const seqStart = parseInt(document.getElementById('sequence-start').value) || 1;
+                    const seqDigits = parseInt(document.getElementById('sequence-digits').value) || 2;
+                    const seqPosition = document.getElementById('sequence-position').value;
+                    
+                    const seqNumber = (seqStart + index).toString().padStart(seqDigits, '0');
+                    
+                    if (seqPosition === 'prefix') {
+                        newName = seqPrefix + seqNumber + '_' + fileName;
+                    } else {
+                        newName = nameWithoutExt + '_' + seqPrefix + seqNumber + extension;
+                    }
+                    break;
+                    
+                case 'custom':
+                    let pattern = document.getElementById('custom-pattern').value || '{name}';
+                    const today = new Date();
+                    const dateStr = today.getFullYear() + 
+                          (today.getMonth() + 1).toString().padStart(2, '0') +
+                          today.getDate().toString().padStart(2, '0');
+                    
+                    const customNumber = (index + 1).toString().padStart(2, '0');
+                    
+                    newName = pattern
+                        .replace(/{name}/g, nameWithoutExt)
+                        .replace(/{ext}/g, extension.replace('.', ''))
+                        .replace(/{num}/g, customNumber)
+                        .replace(/{date}/g, dateStr);
+                    
+                    // 如果没有扩展名，则添加原始扩展名
+                    if (!newName.includes('.') && extension) {
+                        newName += extension;
+                    }
+                    break;
+            }
+            
+            return newName;
+        }
+        
+        // 下载重命名后的文件
+        downloadBtn.addEventListener('click', () => {
+            if (uploadedFiles.length === 0) {
+                alert('请先上传文件喵～');
+                return;
+            }
+            
+            // 如果文件数量大于1，创建ZIP文件
+            if (uploadedFiles.length > 1) {
+                downloadZip();
+            } else {
+                // 单个文件直接下载
+                const file = uploadedFiles[0];
+                const newName = generateNewName(file, 0);
+                downloadSingleFile(file, newName);
+            }
+        });
+        
+        // 下载单个文件
+        function downloadSingleFile(file, newName) {
+            const url = URL.createObjectURL(file);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = newName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+        
+        // 下载ZIP文件（多个文件）
+        async function downloadZip() {
+            // 检查jszip是否已加载
+            if (typeof JSZip === 'undefined') {
+                // 动态加载JSZip库
+                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js');
+            }
+            
+            const zip = new JSZip();
+            
+            // 添加所有文件到ZIP
+            for (let i = 0; i < uploadedFiles.length; i++) {
+                const file = uploadedFiles[i];
+                const newName = generateNewName(file, i);
+                zip.file(newName, file);
+            }
+            
+            // 生成并下载ZIP文件
+            zip.generateAsync({ type: 'blob' }).then(blob => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'renamed_files.zip';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // 动态加载脚本
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+        
+        // 清空所有文件
+        clearBtn.addEventListener('click', () => {
+            uploadedFiles = [];
+            renderFileList();
+            fileList.style.display = 'none';
+            renameOptions.style.display = 'none';
+            downloadBtn.disabled = true;
+        });
+        
+        // 辅助函数：转义正则表达式特殊字符
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+    });
+</script>
+</body>
+</html> 

@@ -76,15 +76,6 @@ function getRandomText() {
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
-    // 添加样式
-    const style = document.createElement('style');
-    style.textContent = `
-        .content p {
-            transition: opacity 0.5s ease;
-        }
-    `;
-    document.head.appendChild(style);
-    
     // 加载文本
     loadTexts();
     

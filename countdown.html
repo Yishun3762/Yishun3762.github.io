@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倒计时工具 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .countdown-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            text-align: center;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .countdown-display {
+            font-size: 5rem;
+            font-family: 'Digital', monospace;
+            font-weight: bold;
+            margin: 2rem 0;
+            color: var(--primary-color);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .countdown-display.ending {
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .countdown-settings {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .time-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .time-input label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .time-input input {
+            width: 80px;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .action-btn {
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .action-btn.stop {
+            background-color: #ff6b6b;
+        }
+        
+        .action-btn.reset {
+            background-color: #6c757d;
+        }
+        
+        .action-btn:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .back-home {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+        
+        .back-home:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        /* 进度条样式 */
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 100%;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            transition: width 1s linear;
+        }
+
+        /* 预设倒计时选择 */
+        .preset-btns {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .preset-btn {
+            padding: 0.5rem 1rem;
+            background-color: rgba(108, 99, 255, 0.2);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .preset-btn:hover {
+            background-color: rgba(108, 99, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* 完成提示样式 */
+        .finish-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .finish-alert.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .finish-alert h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .finish-alert p {
+            margin-bottom: 1.5rem;
+        }
+        
+        .finish-alert button {
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>倒计时工具喵～</h1>
+    <p>设置时间进行倒计时喵～可以用于学习、工作、烹饪或者任何需要计时的场合喵～</p>
+    
+    <div class="countdown-container">
+        <div class="countdown-display" id="countdown-display">00:00:00</div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        
+        <div class="countdown-settings">
+            <div class="time-input">
+                <label for="hours">小时</label>
+                <input type="number" id="hours" min="0" max="23" value="0">
+            </div>
+            
+            <div class="time-input">
+                <label for="minutes">分钟</label>
+                <input type="number" id="minutes" min="0" max="59" value="0">
+            </div>
+            
+            <div class="time-input">
+                <label for="seconds">秒</label>
+                <input type="number" id="seconds" min="0" max="59" value="0">
+            </div>
+        </div>
+        
+        <div class="preset-btns">
+            <button class="preset-btn" data-minutes="1">1分钟</button>
+            <button class="preset-btn" data-minutes="3">3分钟</button>
+            <button class="preset-btn" data-minutes="5">5分钟</button>
+            <button class="preset-btn" data-minutes="10">10分钟</button>
+            <button class="preset-btn" data-minutes="15">15分钟</button>
+            <button class="preset-btn" data-minutes="25">25分钟</button>
+            <button class="preset-btn" data-minutes="30">30分钟</button>
+        </div>
+        
+        <div class="button-group">
+            <button id="start-btn" class="action-btn">开始倒计时</button>
+            <button id="pause-btn" class="action-btn" disabled>暂停</button>
+            <button id="reset-btn" class="action-btn reset" disabled>重置</button>
+        </div>
+    </div>
+    
+    <div class="finish-alert" id="finish-alert">
+        <h2>倒计时结束喵～</h2>
+        <p>你设置的时间已经到了喵～</p>
+        <button id="ok-btn">确定</button>
+    </div>
+    
+    <a href="toolbox.html" class="back-home">返回工具箱</a>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 获取所有需要的元素
+        const hoursInput = document.getElementById('hours');
+        const minutesInput = document.getElementById('minutes');
+        const secondsInput = document.getElementById('seconds');
+        const countdownDisplay = document.getElementById('countdown-display');
+        const progressBar = document.getElementById('progress-bar');
+        const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const presetBtns = document.querySelectorAll('.preset-btn');
+        const finishAlert = document.getElementById('finish-alert');
+        const okBtn = document.getElementById('ok-btn');
+        
+        // 倒计时相关变量
+        let countdown;
+        let totalSeconds = 0;
+        let remainingSeconds = 0;
+        let isRunning = false;
+        let originalTotalSeconds = 0;
+        
+        // 格式化时间显示
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+        
+        // 更新进度条
+        function updateProgressBar() {
+            if (totalSeconds > 0) {
+                const percentage = (remainingSeconds / originalTotalSeconds) * 100;
+                progressBar.style.width = `${percentage}%`;
+            }
+        }
+        
+        // 开始倒计时
+        function startCountdown() {
+            if (!isRunning) {
+                // 如果是新的倒计时，获取输入的时间
+                if (remainingSeconds <= 0) {
+                    const hours = parseInt(hoursInput.value) || 0;
+                    const minutes = parseInt(minutesInput.value) || 0;
+                    const seconds = parseInt(secondsInput.value) || 0;
+                    
+                    totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                    remainingSeconds = totalSeconds;
+                    originalTotalSeconds = totalSeconds;
+                    
+                    // 检查是否设置了有效的时间
+                    if (totalSeconds <= 0) {
+                        alert('请设置一个有效的倒计时时间喵～');
+                        return;
+                    }
+                }
+                
+                isRunning = true;
+                countdownDisplay.classList.remove('ending');
+                
+                // 禁用输入和预设按钮
+                hoursInput.disabled = true;
+                minutesInput.disabled = true;
+                secondsInput.disabled = true;
+                presetBtns.forEach(btn => btn.disabled = true);
+                
+                // 更新按钮状态
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                resetBtn.disabled = false;
+                
+                // 设置倒计时
+                updateCountdown();
+                countdown = setInterval(() => {
+                    remainingSeconds--;
+                    
+                    if (remainingSeconds <= 10) {
+                        countdownDisplay.classList.add('ending');
+                    }
+                    
+                    if (remainingSeconds <= 0) {
+                        endCountdown();
+                    } else {
+                        updateCountdown();
+                    }
+                }, 1000);
+            }
+        }
+        
+        // 更新倒计时显示
+        function updateCountdown() {
+            countdownDisplay.textContent = formatTime(remainingSeconds);
+            updateProgressBar();
+        }
+        
+        // 暂停倒计时
+        function pauseCountdown() {
+            if (isRunning) {
+                clearInterval(countdown);
+                isRunning = false;
+                
+                // 更新按钮状态
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+                resetBtn.disabled = false;
+            }
+        }
+        
+        // 重置倒计时
+        function resetCountdown() {
+            clearInterval(countdown);
+            isRunning = false;
+            totalSeconds = 0;
+            remainingSeconds = 0;
+            
+            countdownDisplay.textContent = '00:00:00';
+            countdownDisplay.classList.remove('ending');
+            progressBar.style.width = '100%';
+            
+            // 启用输入和预设按钮
+            hoursInput.disabled = false;
+            minutesInput.disabled = false;
+            secondsInput.disabled = false;
+            presetBtns.forEach(btn => btn.disabled = false);
+            
+            // 恢复输入框的值
+            hoursInput.value = 0;
+            minutesInput.value = 0;
+            secondsInput.value = 0;
+            
+            // 更新按钮状态
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resetBtn.disabled = true;
+        }
+        
+        // 结束倒计时
+        function endCountdown() {
+            clearInterval(countdown);
+            isRunning = false;
+            
+            countdownDisplay.textContent = '00:00:00';
+            progressBar.style.width = '0%';
+            
+            // 显示完成提示
+            finishAlert.classList.add('show');
+            
+            // 播放提示音
+            const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAB/f39/f39/');
+            try {
+                audio.play();
+            } catch (error) {
+                console.log('无法播放提示音喵～');
+            }
+            
+            // 重置倒计时
+            resetCountdown();
+        }
+        
+        // 设置预设时间
+        presetBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const minutes = parseInt(btn.getAttribute('data-minutes'));
+                hoursInput.value = 0;
+                minutesInput.value = minutes;
+                secondsInput.value = 0;
+            });
+        });
+        
+        // 事件监听
+        startBtn.addEventListener('click', startCountdown);
+        pauseBtn.addEventListener('click', pauseCountdown);
+        resetBtn.addEventListener('click', resetCountdown);
+        okBtn.addEventListener('click', () => {
+            finishAlert.classList.remove('show');
+        });
+        
+        // 初始化进度条
+        progressBar.style.width = '100%';
+    });
+</script>
+
+<script src="script.js"></script>
+</body>
+</html> 

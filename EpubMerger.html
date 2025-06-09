@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPUB合并工具</title>
+</head>
+<style>
+    :root {
+        --primary-color: #4a6bff;
+        --primary-hover: #3a59e0;
+        --secondary-color: #f5f7ff;
+        --text-color: #333;
+        --light-gray: #e0e0e0;
+        --medium-gray: #999;
+        --border-radius: 8px;
+        --shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        --transition: all 0.3s ease;
+    }
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        color: var(--text-color);
+        line-height: 1.6;
+        background-color: #f9faff;
+        padding: 20px;
+    }
+    
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 30px;
+    }
+    
+    header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--light-gray);
+        padding-bottom: 20px;
+    }
+    
+    header h1 {
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+    
+    section {
+        margin-bottom: 30px;
+    }
+    
+    h2 {
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+        color: #444;
+    }
+    
+    .upload-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .upload-area {
+        width: 100%;
+        border: 2px dashed var(--light-gray);
+        border-radius: var(--border-radius);
+        padding: 40px 20px;
+        text-align: center;
+        margin-bottom: 15px;
+        transition: var(--transition);
+        cursor: pointer;
+        position: relative;
+        background-color: var(--secondary-color);
+    }
+    
+    .upload-area:hover, .upload-area.drag-over {
+        border-color: var(--primary-color);
+        background-color: rgba(74, 107, 255, 0.05);
+    }
+    
+    .upload-icon {
+        margin-bottom: 15px;
+    }
+    
+    .upload-icon svg {
+        fill: var(--primary-color);
+    }
+    
+    .upload-area input[type="file"] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    .btn {
+        background-color: white;
+        border: 1px solid var(--light-gray);
+        border-radius: var(--border-radius);
+        padding: 10px 20px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+    
+    .btn.primary {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+    }
+    
+    .btn.primary:hover {
+        background-color: var(--primary-hover);
+    }
+    
+    .btn:disabled {
+        background-color: var(--light-gray);
+        cursor: not-allowed;
+        color: var(--medium-gray);
+    }
+    
+    .file-list {
+        list-style: none;
+        border: 1px solid var(--light-gray);
+        border-radius: var(--border-radius);
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .file-list:empty {
+        display: none;
+    }
+    
+    .file-list:empty + .hint {
+        display: none;
+    }
+    
+    .file-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--light-gray);
+        display: flex;
+        align-items: center;
+        transition: var(--transition);
+        background-color: white;
+    }
+    
+    .file-item:last-child {
+        border-bottom: none;
+    }
+    
+    .file-item:hover {
+        background-color: var(--secondary-color);
+    }
+    
+    .file-item .file-name {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .file-item .file-size {
+        margin-left: 10px;
+        font-size: 0.8rem;
+        color: var(--medium-gray);
+    }
+    
+    .file-item .remove-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #ff4d4d;
+        margin-left: 15px;
+        opacity: 0.7;
+        transition: var(--transition);
+    }
+    
+    .file-item .remove-btn:hover {
+        opacity: 1;
+    }
+    
+    .file-item .drag-handle {
+        cursor: grab;
+        margin-right: 10px;
+        color: var(--medium-gray);
+    }
+    
+    .file-item.sortable-ghost {
+        opacity: 0.4;
+    }
+    
+    .hint {
+        font-size: 0.9rem;
+        color: var(--medium-gray);
+        margin-bottom: 10px;
+    }
+    
+    .options-section .option {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .options-section .option label {
+        width: 180px;
+        flex-shrink: 0;
+    }
+    
+    .options-section .option input[type="text"] {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid var(--light-gray);
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        transition: var(--transition);
+    }
+    
+    .options-section .option input[type="text"]:focus {
+        border-color: var(--primary-color);
+        outline: none;
+    }
+    
+    .options-section .option.checkbox {
+        display: flex;
+        align-items: center;
+    }
+    
+    .options-section .option.checkbox input[type="checkbox"] {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+    }
+    
+    .action-section {
+        text-align: center;
+        margin-top: 30px;
+    }
+    
+    .progress-container {
+        margin-top: 20px;
+        width: 100%;
+        height: 10px;
+        background-color: var(--light-gray);
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background-color: var(--primary-color);
+        width: 0;
+        transition: width 0.3s;
+    }
+    
+    .progress-container span {
+        display: block;
+        margin-top: 8px;
+        font-size: 0.9rem;
+        color: var(--medium-gray);
+    }
+    
+    .hidden {
+        display: none;
+    }
+    
+    footer {
+        text-align: center;
+        margin-top: 30px;
+        color: var(--medium-gray);
+        font-size: 0.9rem;
+    }
+    
+    @media (max-width: 600px) {
+        .container {
+            padding: 15px;
+        }
+        
+        .options-section .option {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .options-section .option label {
+            margin-bottom: 5px;
+        }
+        
+        .options-section .option input[type="text"] {
+            width: 100%;
+        }
+    } 
+</style>
+<body>
+    <div class="container">
+        <header>
+            <h1>EPUB电子书合并工具</h1>
+            <p>上传多个EPUB文件并将它们合并为一本电子书</p>
+        </header>
+        
+        <main>
+            <section class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64">
+                            <path fill="none" d="M0 0h24v24H0z"/>
+                            <path d="M12 12.586l4.243-4.242 1.415 1.414L12 15.414l-5.657-5.656 1.414-1.414z"/>
+                            <path d="M12 3a9 9 0 0 1 9 9h-2a7 7 0 0 0-7-7 7 7 0 0 0-7 7H3a9 9 0 0 1 9-9z"/>
+                        </svg>
+                    </div>
+                    <p>点击或拖放EPUB文件到此处</p>
+                    <input type="file" id="fileInput" accept=".epub" multiple>
+                </div>
+                <button id="addFilesBtn" class="btn">选择文件</button>
+            </section>
+
+            <section class="files-section">
+                <h2>文件列表</h2>
+                <p class="hint">拖动调整顺序（将按此顺序合并）</p>
+                <ul id="fileList" class="file-list"></ul>
+            </section>
+
+            <section class="options-section">
+                <h2>合并选项</h2>
+                <div class="option">
+                    <label for="titleInput">合并后的标题：</label>
+                    <input type="text" id="titleInput" placeholder="输入合并后的电子书标题">
+                </div>
+                <div class="option">
+                    <label for="authorInput">作者：</label>
+                    <input type="text" id="authorInput" placeholder="输入作者名称">
+                </div>
+                <div class="option checkbox">
+                    <input type="checkbox" id="tocCheckbox" checked>
+                    <label for="tocCheckbox">生成目录</label>
+                </div>
+                <div class="option checkbox">
+                    <input type="checkbox" id="coverCheckbox" checked>
+                    <label for="coverCheckbox">使用第一本书的封面</label>
+                </div>
+            </section>
+
+            <section class="action-section">
+                <button id="mergeBtn" class="btn primary" disabled>合并EPUB</button>
+                <div id="progressContainer" class="progress-container hidden">
+                    <div id="progressBar" class="progress-bar"></div>
+                    <span id="progressText">处理中...</span>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>在浏览器中运行，您的文件不会上传到任何服务器</p>
+        </footer>
+    </div>
+
+    <!-- 加载必要的库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    
+    <!-- 主脚本 -->
+    <script>
+        // 全局变量
+let epubFiles = [];
+let sortable;
+let fileInputProcessing = false; // 添加处理状态标志
+
+// DOM元素
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const addFilesBtn = document.getElementById('addFilesBtn');
+const fileList = document.getElementById('fileList');
+const mergeBtn = document.getElementById('mergeBtn');
+const titleInput = document.getElementById('titleInput');
+const authorInput = document.getElementById('authorInput');
+const tocCheckbox = document.getElementById('tocCheckbox');
+const coverCheckbox = document.getElementById('coverCheckbox');
+const progressContainer = document.getElementById('progressContainer');
+const progressBar = document.getElementById('progressBar');
+const progressText = document.getElementById('progressText');
+
+// 初始化
+document.addEventListener('DOMContentLoaded', () => {
+    initDragAndDrop();
+    initFileInput();
+    initSortable();
+    initMergeButton();
+});
+
+// 初始化拖放功能
+function initDragAndDrop() {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+            uploadArea.classList.add('drag-over');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+            uploadArea.classList.remove('drag-over');
+        });
+    });
+
+    uploadArea.addEventListener('drop', handleDrop);
+}
+
+// 处理拖放文件
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    handleFiles(files);
+}
+
+// 初始化文件输入
+function initFileInput() {
+    fileInput.addEventListener('change', (e) => {
+        if (fileInputProcessing) return; // 如果正在处理中，则忽略
+        fileInputProcessing = true; // 设置处理标志
+        
+        try {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                handleFiles(files);
+            }
+        } catch (error) {
+            console.error('处理文件时出错:', error);
+        } finally {
+            // 重置输入框，以便能重复选择同一文件
+            // 已移除重复点击的根源，故恢复较短的延时
+            setTimeout(() => {
+                fileInput.value = '';
+                fileInputProcessing = false; // 处理完成
+            }, 100);
+        }
+    });
+
+    addFilesBtn.addEventListener('click', () => {
+        if (!fileInputProcessing) { // 添加状态检查
+            fileInput.click();
+        }
+    });
+}
+
+// 初始化排序功能
+function initSortable() {
+    sortable = new Sortable(fileList, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: updateEpubFilesOrder
+    });
+}
+
+// 更新文件排序
+function updateEpubFilesOrder(evt) {
+    const oldIndex = evt.oldIndex;
+    const newIndex = evt.newIndex;
+    
+    if (oldIndex !== newIndex) {
+        const item = epubFiles.splice(oldIndex, 1)[0];
+        epubFiles.splice(newIndex, 0, item);
+    }
+}
+
+// 初始化合并按钮
+function initMergeButton() {
+    mergeBtn.addEventListener('click', startMerging);
+}
+
+// 处理文件上传
+function handleFiles(files) {
+    if (!files || files.length === 0) {
+        return;
+    }
+
+    const epubFilesArray = Array.from(files).filter(file => 
+        file.name.toLowerCase().endsWith('.epub')
+    );
+
+    if (epubFilesArray.length === 0) {
+        alert('请选择EPUB文件！');
+        return;
+    }
+
+    // 批量处理所有文件
+    let addedCount = 0;
+    epubFilesArray.forEach(file => {
+        // 检查文件是否已存在
+        const fileExists = epubFiles.some(existingFile => 
+            existingFile.name === file.name && existingFile.size === file.size
+        );
+        
+        if (!fileExists) {
+            epubFiles.push(file);
+            addFileToList(file);
+            addedCount++;
+        }
+    });
+
+    // 更新界面状态
+    if (addedCount > 0) {
+        updateUI();
+    }
+}
+
+// 添加文件到列表
+function addFileToList(file) {
+    const li = document.createElement('li');
+    li.className = 'file-item';
+    li.dataset.filename = file.name;
+    
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.innerHTML = '⋮⋮';
+    
+    const name = document.createElement('span');
+    name.className = 'file-name';
+    name.textContent = file.name;
+    
+    const size = document.createElement('span');
+    size.className = 'file-size';
+    size.textContent = formatFileSize(file.size);
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-btn';
+    removeBtn.innerHTML = '×';
+    removeBtn.addEventListener('click', () => removeFile(file, li));
+    
+    li.appendChild(handle);
+    li.appendChild(name);
+    li.appendChild(size);
+    li.appendChild(removeBtn);
+    
+    fileList.appendChild(li);
+}
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 删除文件
+function removeFile(file, li) {
+    const index = epubFiles.findIndex(f => f.name === file.name && f.size === file.size);
+    if (index > -1) {
+        epubFiles.splice(index, 1);
+        li.remove();
+        updateUI();
+    }
+}
+
+// 更新界面状态
+function updateUI() {
+    mergeBtn.disabled = epubFiles.length < 2;
+    
+    if (epubFiles.length > 0 && !titleInput.value) {
+        let defaultTitle = '合并电子书';
+        if (epubFiles.length > 0) {
+            const firstFileName = epubFiles[0].name.replace('.epub', '');
+            defaultTitle = firstFileName + ' 等';
+        }
+        titleInput.value = defaultTitle;
+    }
+}
+
+// 开始合并处理
+async function startMerging() {
+    if (epubFiles.length < 2) {
+        alert('请至少选择两个EPUB文件进行合并！');
+        return;
+    }
+
+    try {
+        // 显示进度条
+        progressContainer.classList.remove('hidden');
+        mergeBtn.disabled = true;
+        
+        // 获取设置
+        const title = titleInput.value || '合并电子书';
+        const author = authorInput.value || 'EPUB合并工具';
+        const generateToc = tocCheckbox.checked;
+        const useFirstBookCover = coverCheckbox.checked;
+        
+        // 开始合并过程
+        await mergeEpubs(epubFiles, {
+            title,
+            author,
+            generateToc,
+            useFirstBookCover
+        });
+        
+        // 重置UI
+        resetUI();
+        
+    } catch (error) {
+        console.error('合并过程中发生错误:', error);
+        alert('合并失败: ' + error.message);
+        progressContainer.classList.add('hidden');
+        mergeBtn.disabled = false;
+    }
+}
+
+// 重置UI
+function resetUI() {
+    // epubFiles = [];
+    // fileList.innerHTML = '';
+    progressContainer.classList.add('hidden');
+    mergeBtn.disabled = false;
+    updateProgress(0, '处理完成！');
+}
+
+// 更新进度条
+function updateProgress(percent, message) {
+    progressBar.style.width = `${percent}%`;
+    progressText.textContent = message || `处理中... ${percent}%`;
+}
+
+// 合并EPUB文件
+async function mergeEpubs(files, options) {
+    updateProgress(5, '正在读取EPUB文件...');
+    
+    // 创建一个新的JSZip实例存储合并后的内容
+    const mergedZip = new JSZip();
+    
+    // 存储每本书的内容信息
+    const books = [];
+    
+    // 唯一ID计数器
+    let idCounter = 1;
+    
+    // 处理每个EPUB文件
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const filePercent = 70 / files.length;
+        updateProgress(5 + (i * filePercent), `正在处理 ${file.name}...`);
+        
+        const bookData = await processEpub(file, idCounter);
+        books.push(bookData);
+        
+        // 更新ID计数器
+        idCounter += bookData.itemCount || 100;
+    }
+    
+    updateProgress(75, '正在合并内容...');
+    
+    // 创建合并后的OPF文件
+    const mergedOpf = await createMergedOpf(books, options);
+    
+    // 将所有文件添加到合并后的ZIP
+    for (const book of books) {
+        for (const [path, content] of Object.entries(book.files)) {
+            mergedZip.file(path, content);
+        }
+    }
+    
+    // 添加合并后的OPF和NCX
+    mergedZip.file('OEBPS/content.opf', mergedOpf.opf);
+    if (options.generateToc) {
+        mergedZip.file('OEBPS/toc.ncx', mergedOpf.ncx);
+    }
+    
+    // 添加mimetype文件（必须是第一个且不压缩的文件）
+    mergedZip.file('mimetype', 'application/epub+zip', {compression: 'STORE'});
+    
+    // 添加container.xml
+    mergedZip.file('META-INF/container.xml', 
+        '<?xml version="1.0" encoding="UTF-8"?>' +
+        '<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">' +
+        '<rootfiles>' +
+        '<rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>' +
+        '</rootfiles>' +
+        '</container>'
+    );
+    
+    updateProgress(90, '正在生成EPUB文件...');
+    
+    // 生成EPUB文件
+    const epubBlob = await mergedZip.generateAsync({
+        type: 'blob',
+        mimeType: 'application/epub+zip',
+        compression: 'DEFLATE',
+        compressionOptions: {level: 9}
+    }, (metadata) => {
+        updateProgress(90 + (metadata.percent * 0.1), '正在生成EPUB文件...');
+    });
+    
+    // 保存文件
+    saveAs(epubBlob, `${options.title}.epub`);
+    
+    updateProgress(100, '合并完成！');
+    
+    return true;
+}
+
+// 处理单个EPUB文件
+async function processEpub(file, startId) {
+    try {
+        // 读取EPUB文件（实际上是ZIP）
+        const zip = await JSZip.loadAsync(file);
+        
+        // 查找OPF文件路径
+        const containerXml = await zip.file('META-INF/container.xml').async('text');
+        const opfPathMatch = containerXml.match(/full-path="([^"]+)"/);
+        if (!opfPathMatch) {
+            throw new Error(`无法在 ${file.name} 中找到OPF文件`);
+        }
+        
+        const opfPath = opfPathMatch[1];
+        const opfDir = opfPath.substring(0, opfPath.lastIndexOf('/') + 1) || '';
+        
+        // 读取OPF文件
+        const opfContent = await zip.file(opfPath).async('text');
+        
+        // 解析OPF获取元数据、资源和章节
+        const parser = new DOMParser();
+        const opfDoc = parser.parseFromString(opfContent, 'application/xml');
+        
+        // 获取元数据
+        const title = getElementText(opfDoc, 'title') || file.name.replace('.epub', '');
+        const author = getElementText(opfDoc, 'creator') || '未知作者';
+        
+        // 获取资源项
+        const manifest = opfDoc.querySelectorAll('manifest item');
+        const spine = opfDoc.querySelectorAll('spine itemref');
+        
+        // 创建资源映射
+        const items = {};
+        const filePromises = [];
+        let coverPath = null;
+        
+        // 查找目录文件路径
+        let tocNcxPath = null;
+        let tocNavPath = null;
+        
+        // 处理所有资源
+        for (const item of manifest) {
+            const id = item.getAttribute('id');
+            const href = item.getAttribute('href');
+            const mediaType = item.getAttribute('media-type');
+            const fullPath = opfDir + href;
+            
+            // 查找封面
+            if (id === 'cover-image' || id === 'cover' || href.includes('cover')) {
+                coverPath = fullPath;
+            }
+            
+            // 查找目录文件
+            if (id === 'ncx' || id === 'toc' || href.endsWith('.ncx') || mediaType === 'application/x-dtbncx+xml') {
+                tocNcxPath = fullPath;
+            }
+            
+            // 查找EPUB3导航文件（通常是nav.xhtml）
+            if (id === 'nav' || href.includes('nav') && mediaType.includes('html') || 
+                item.hasAttribute('properties') && item.getAttribute('properties').includes('nav')) {
+                tocNavPath = fullPath;
+            }
+            
+            // 准备资源对象
+            items[id] = {
+                id: `${startId}_${id}`,
+                href: `book_${startId}/${href}`,
+                mediaType,
+                fullPath,
+                originalHref: href
+            };
+            
+            // 读取文件内容
+            const zipFile = zip.file(fullPath);
+            if (zipFile) {
+                const isText = mediaType.includes('text') || 
+                               mediaType.includes('xml') || 
+                               mediaType.includes('html') || 
+                               mediaType.includes('css');
+                
+                const promise = isText ? 
+                    zipFile.async('text').then(content => {
+                        return { path: fullPath, content, isText };
+                    }) : 
+                    zipFile.async('arraybuffer').then(content => {
+                        return { path: fullPath, content, isText };
+                    });
+                
+                filePromises.push(promise);
+            }
+        }
+        
+        // 获取阅读顺序
+        const spineItems = Array.from(spine).map(item => {
+            const idref = item.getAttribute('idref');
+            return items[idref];
+        }).filter(Boolean);
+        
+        // 等待所有文件内容读取完成
+        const fileContents = await Promise.all(filePromises);
+        
+        // 准备文件映射表
+        const files = {};
+        fileContents.forEach(({ path, content, isText }) => {
+            // 找到对应的item
+            const itemKey = Object.keys(items).find(key => items[key].fullPath === path);
+            if (itemKey) {
+                const item = items[itemKey];
+                const newPath = `OEBPS/${item.href}`;
+                
+                if (isText) {
+                    // 为HTML文件添加书名标记
+                    if (item.mediaType.includes('html')) {
+                        let htmlContent = content;
+                        
+                        // 根据需要修改HTML内容，例如添加书名标记
+                        if (htmlContent.includes('<body>')) {
+                            htmlContent = htmlContent.replace(
+                                '<body>', 
+                                `<body><div class="book-title" id="book_${startId}"><h2>${title}</h2><p>${author}</p></div>`
+                            );
+                        }
+                        
+                        files[newPath] = htmlContent;
+                    } else {
+                        files[newPath] = content;
+                    }
+                } else {
+                    files[newPath] = content;
+                }
+            }
+        });
+
+        // 解析目录结构
+        let tocItems = [];
+        
+        // 尝试从NCX中提取目录
+        if (tocNcxPath && zip.file(tocNcxPath)) {
+            const tocContent = await zip.file(tocNcxPath).async('text');
+            const tocDoc = parser.parseFromString(tocContent, 'application/xml');
+            
+            // 递归提取NCX导航点
+            function extractNavPoints(parentElement, level = 1) {
+                const navPoints = parentElement.querySelectorAll(':scope > navPoint');
+                const result = [];
+                
+                for (const navPoint of navPoints) {
+                    const id = navPoint.getAttribute('id');
+                    const navLabel = navPoint.querySelector('navLabel text');
+                    const content = navPoint.querySelector('content');
+                    
+                    if (navLabel && content) {
+                        const title = navLabel.textContent.trim();
+                        let src = content.getAttribute('src');
+                        let fragment = '';
+                        
+                        // 处理URL片段
+                        if (src.includes('#')) {
+                            const parts = src.split('#');
+                            src = parts[0];
+                            fragment = parts[1];
+                        }
+                        
+                        // 查找对应的item并获取新路径
+                        const fullPath = opfDir + src;
+                        const itemKey = Object.keys(items).find(key => 
+                            items[key].fullPath === fullPath || 
+                            opfDir + items[key].originalHref === fullPath
+                        );
+                        
+                        const item = itemKey ? items[itemKey] : null;
+                        const href = item ? item.href : `book_${startId}/${src}`;
+                        
+                        // 创建目录项
+                        const tocItem = {
+                            id: `navpoint-${startId}-${id}`,
+                            title,
+                            href: fragment ? `${href}#${fragment}` : href,
+                            level,
+                            children: extractNavPoints(navPoint, level + 1)
+                        };
+                        
+                        result.push(tocItem);
+                    }
+                }
+                
+                return result;
+            }
+            
+            const navMap = tocDoc.querySelector('navMap');
+            if (navMap) {
+                tocItems = extractNavPoints(navMap);
+            }
+        }
+        // 如果没有从NCX获取到目录，尝试从nav.xhtml中提取（EPUB3格式）
+        else if (tocNavPath && zip.file(tocNavPath)) {
+            const tocContent = await zip.file(tocNavPath).async('text');
+            const tocDoc = parser.parseFromString(tocContent, 'text/html');
+            
+            // 递归提取HTML导航
+            function extractNavItems(parentElement, level = 1) {
+                const navItems = parentElement.querySelectorAll(':scope > li');
+                const result = [];
+                
+                for (let i = 0; i < navItems.length; i++) {
+                    const navItem = navItems[i];
+                    const link = navItem.querySelector('a');
+                    
+                    if (link) {
+                        const title = link.textContent.trim();
+                        let src = link.getAttribute('href');
+                        let fragment = '';
+                        
+                        // 处理URL片段
+                        if (src.includes('#')) {
+                            const parts = src.split('#');
+                            src = parts[0];
+                            fragment = parts[1];
+                        }
+                        
+                        // 处理相对路径，得到完整路径
+                        const fullPath = src.startsWith('/') ? src.substring(1) : opfDir + src;
+                        
+                        // 查找对应的item并获取新路径
+                        const itemKey = Object.keys(items).find(key => 
+                            items[key].fullPath === fullPath || 
+                            opfDir + items[key].originalHref === fullPath
+                        );
+                        
+                        const item = itemKey ? items[itemKey] : null;
+                        const href = item ? item.href : `book_${startId}/${src}`;
+                        
+                        // 检查是否有子菜单
+                        const sublist = navItem.querySelector('ol, ul');
+                        const children = sublist ? extractNavItems(sublist, level + 1) : [];
+                        
+                        // 创建目录项
+                        const tocItem = {
+                            id: `navpoint-${startId}-${i + 1}`,
+                            title,
+                            href: fragment ? `${href}#${fragment}` : href,
+                            level,
+                            children
+                        };
+                        
+                        result.push(tocItem);
+                    }
+                }
+                
+                return result;
+            }
+            
+            const nav = tocDoc.querySelector('nav[epub\\:type="toc"], nav[role="doc-toc"]');
+            if (nav) {
+                const ol = nav.querySelector('ol');
+                if (ol) {
+                    tocItems = extractNavItems(ol);
+                }
+            }
+        }
+        
+        return {
+            title,
+            author,
+            items,
+            spineItems,
+            files,
+            coverPath,
+            itemCount: Object.keys(items).length,
+            tocItems // 添加提取的目录结构
+        };
+        
+    } catch (error) {
+        console.error(`处理 ${file.name} 时出错:`, error);
+        throw new Error(`处理 ${file.name} 失败: ${error.message}`);
+    }
+}
+
+// 创建合并后的OPF和NCX文件
+async function createMergedOpf(books, options) {
+    const now = new Date().toISOString().split('T')[0];
+    
+    // 开始构建OPF
+    let opf = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    opf += '<package version="3.0" xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId">\n';
+    
+    // 添加元数据
+    opf += '  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">\n';
+    opf += `    <dc:title>${escapeXml(options.title)}</dc:title>\n`;
+    opf += `    <dc:creator>${escapeXml(options.author)}</dc:creator>\n`;
+    opf += `    <dc:date>${now}</dc:date>\n`;
+    opf += '    <dc:language>zh-CN</dc:language>\n';
+    opf += `    <dc:identifier id="BookId">urn:uuid:${generateUUID()}</dc:identifier>\n`;
+    opf += '    <meta name="generator" content="EPUB合并工具" />\n';
+    opf += '  </metadata>\n';
+    
+    // 开始构建资源清单
+    opf += '  <manifest>\n';
+    
+    // 收集所有项目
+    let coverItem = null;
+    const allItems = [];
+    books.forEach((book, index) => {
+        Object.values(book.items).forEach(item => {
+            // 检查是否为封面
+            if (index === 0 && options.useFirstBookCover && book.coverPath && 
+                item.fullPath === book.coverPath) {
+                coverItem = item;
+                opf += `    <item id="cover-image" href="${item.href}" media-type="${item.mediaType}" properties="cover-image" />\n`;
+            } else {
+                opf += `    <item id="${item.id}" href="${item.href}" media-type="${item.mediaType}" />\n`;
+            }
+            allItems.push(item);
+        });
+    });
+    
+    // 添加TOC NCX引用
+    if (options.generateToc) {
+        opf += '    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml" />\n';
+    }
+    
+    opf += '  </manifest>\n';
+    
+    // 构建spine部分
+    opf += '  <spine';
+    if (options.generateToc) {
+        opf += ' toc="ncx"';
+    }
+    opf += '>\n';
+    
+    // 添加所有内容文件
+    books.forEach(book => {
+        book.spineItems.forEach(item => {
+            opf += `    <itemref idref="${item.id}" />\n`;
+        });
+    });
+    
+    opf += '  </spine>\n';
+    opf += '</package>';
+    
+    // 如果需要生成目录，创建NCX
+    let ncx = '';
+    if (options.generateToc) {
+        // 计算目录的最大深度
+        let maxDepth = 1;
+        books.forEach(book => {
+            if (book.tocItems && book.tocItems.length > 0) {
+                const calculateMaxDepth = (items, currentDepth) => {
+                    let depth = currentDepth;
+                    items.forEach(item => {
+                        if (item.children && item.children.length > 0) {
+                            const childDepth = calculateMaxDepth(item.children, currentDepth + 1);
+                            depth = Math.max(depth, childDepth);
+                        }
+                    });
+                    return depth;
+                };
+                
+                const bookMaxDepth = calculateMaxDepth(book.tocItems, 1);
+                maxDepth = Math.max(maxDepth, bookMaxDepth + 1);  // +1 因为我们在每个书前面添加一个书标题层级
+            }
+        });
+
+        ncx = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        ncx += '<!DOCTYPE ncx PUBLIC "-//NISO//DTD ncx 2005-1//EN" "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd">\n';
+        ncx += '<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">\n';
+        ncx += '  <head>\n';
+        ncx += '    <meta name="dtb:uid" content="urn:uuid:12345678-1234-1234-1234-123456789012" />\n';
+        ncx += `    <meta name="dtb:depth" content="${maxDepth}" />\n`;
+        ncx += '    <meta name="dtb:totalPageCount" content="0" />\n';
+        ncx += '    <meta name="dtb:maxPageNumber" content="0" />\n';
+        ncx += '  </head>\n';
+        ncx += `  <docTitle><text>${escapeXml(options.title)}</text></docTitle>\n`;
+        ncx += `  <docAuthor><text>${escapeXml(options.author)}</text></docAuthor>\n`;
+        ncx += '  <navMap>\n';
+        
+        // 为每本书及其章节添加导航点
+        let playOrder = 1;
+        
+        books.forEach((book, bookIndex) => {
+            // 添加书本标题作为一级导航点
+            ncx += `    <navPoint id="book-${bookIndex+1}" playOrder="${playOrder++}">\n`;
+            ncx += `      <navLabel><text>${escapeXml(book.title)}</text></navLabel>\n`;
+            
+            // 使用每本书的第一个内容条目作为指向
+            if (book.spineItems.length > 0) {
+                const firstItem = book.spineItems[0];
+                ncx += `      <content src="${firstItem.href}#book_${firstItem.id.split('_')[0]}" />\n`;
+            }
+            
+            // 如果这本书有提取的目录结构，使用它
+            if (book.tocItems && book.tocItems.length > 0) {
+                // 递归生成嵌套的导航点
+                function generateNavPoints(items, indent) {
+                    items.forEach(item => {
+                        const spaces = '  '.repeat(indent);
+                        ncx += `${spaces}<navPoint id="${item.id}" playOrder="${playOrder++}">\n`;
+                        ncx += `${spaces}  <navLabel><text>${escapeXml(item.title)}</text></navLabel>\n`;
+                        ncx += `${spaces}  <content src="${item.href}" />\n`;
+                        
+                        if (item.children && item.children.length > 0) {
+                            generateNavPoints(item.children, indent + 1);
+                        }
+                        
+                        ncx += `${spaces}</navPoint>\n`;
+                    });
+                }
+                
+                generateNavPoints(book.tocItems, 3);  // 3级缩进，因为书标题是2级缩进
+            }
+            
+            ncx += '    </navPoint>\n';
+        });
+        
+        ncx += '  </navMap>\n';
+        ncx += '</ncx>';
+    }
+    
+    return { 
+        opf, 
+        ncx 
+    };
+}
+
+// 辅助函数：从XML中获取元素文本
+function getElementText(doc, elementName) {
+    const element = doc.querySelector(elementName);
+    return element ? element.textContent.trim() : '';
+}
+
+// 辅助函数：XML转义
+function escapeXml(unsafe) {
+    if (typeof unsafe !== 'string') return '';
+    return unsafe.replace(/[<>&'"]/g, (c) => {
+        switch (c) {
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '&': return '&amp;';
+            case '\'': return '&apos;';
+            case '"': return '&quot;';
+            default: return c;
+        }
+    });
+}
+
+// 辅助函数：生成UUID
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+    </script>
+</body>
+</html> 

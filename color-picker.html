@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>颜色选择器 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .color-picker-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .color-display {
+            height: 200px;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .color-info {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            backdrop-filter: blur(5px);
+        }
+        
+        .color-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .color-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .color-input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .color-input-group h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+        
+        .input-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .input-row label {
+            width: 80px;
+            font-weight: 500;
+        }
+        
+        .input-row input[type="range"] {
+            flex-grow: 1;
+            margin-right: 1rem;
+        }
+        
+        .input-row input[type="number"] {
+            width: 70px;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .hex-input {
+            margin-top: 1rem;
+        }
+        
+        .hex-input label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .hex-input input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+        
+        .color-input {
+            width: 100%;
+            height: 60px;
+            padding: 0;
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+        
+        .palette-color {
+            height: 40px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .palette-color:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .palette-color.selected {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+        
+        .back-home {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+        
+        .back-home:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .copy-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .copy-btn {
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            flex: 1;
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>颜色选择器喵～</h1>
+    <p>便捷的颜色选择工具喵～轻松查看和复制HEX、RGB和HSL值喵～</p>
+    
+    <div class="color-picker-container">
+        <div id="color-display" class="color-display" style="background-color: #6c63ff;">
+            <div class="color-info">
+                <div id="hex-value">#6C63FF</div>
+                <div id="rgb-value">RGB(108, 99, 255)</div>
+                <div id="hsl-value">HSL(243, 100%, 69%)</div>
+            </div>
+        </div>
+        
+        <div class="color-controls">
+            <div class="color-input-group">
+                <h3>颜色选择器</h3>
+                <input type="color" id="color-picker" class="color-input" value="#6c63ff">
+                
+                <div class="hex-input">
+                    <label for="hex-input">HEX 值</label>
+                    <input type="text" id="hex-input" value="#6C63FF" placeholder="#RRGGBB">
+                </div>
+                
+                <h3>常用颜色</h3>
+                <div class="color-palette">
+                    <div class="palette-color" style="background-color: #ff6b6b;" data-color="#ff6b6b"></div>
+                    <div class="palette-color" style="background-color: #ff922b;" data-color="#ff922b"></div>
+                    <div class="palette-color" style="background-color: #ffd43b;" data-color="#ffd43b"></div>
+                    <div class="palette-color" style="background-color: #69db7c;" data-color="#69db7c"></div>
+                    <div class="palette-color" style="background-color: #4dabf7;" data-color="#4dabf7"></div>
+                    <div class="palette-color" style="background-color: #6c63ff;" data-color="#6c63ff"></div>
+                    <div class="palette-color" style="background-color: #da77f2;" data-color="#da77f2"></div>
+                    <div class="palette-color" style="background-color: #f783ac;" data-color="#f783ac"></div>
+                    <div class="palette-color" style="background-color: #e9ecef;" data-color="#e9ecef"></div>
+                    <div class="palette-color" style="background-color: #868e96;" data-color="#868e96"></div>
+                    <div class="palette-color" style="background-color: #495057;" data-color="#495057"></div>
+                    <div class="palette-color" style="background-color: #212529;" data-color="#212529"></div>
+                </div>
+            </div>
+            
+            <div class="color-input-group">
+                <h3>RGB 值调整</h3>
+                <div class="input-row">
+                    <label for="red-range">R:</label>
+                    <input type="range" id="red-range" min="0" max="255" value="108">
+                    <input type="number" id="red-input" min="0" max="255" value="108">
+                </div>
+                
+                <div class="input-row">
+                    <label for="green-range">G:</label>
+                    <input type="range" id="green-range" min="0" max="255" value="99">
+                    <input type="number" id="green-input" min="0" max="255" value="99">
+                </div>
+                
+                <div class="input-row">
+                    <label for="blue-range">B:</label>
+                    <input type="range" id="blue-range" min="0" max="255" value="255">
+                    <input type="number" id="blue-input" min="0" max="255" value="255">
+                </div>
+                
+                <h3>HSL 值调整</h3>
+                <div class="input-row">
+                    <label for="hue-range">色调:</label>
+                    <input type="range" id="hue-range" min="0" max="360" value="243">
+                    <input type="number" id="hue-input" min="0" max="360" value="243">
+                </div>
+                
+                <div class="input-row">
+                    <label for="saturation-range">饱和度:</label>
+                    <input type="range" id="saturation-range" min="0" max="100" value="100">
+                    <input type="number" id="saturation-input" min="0" max="100" value="100">
+                </div>
+                
+                <div class="input-row">
+                    <label for="lightness-range">亮度:</label>
+                    <input type="range" id="lightness-range" min="0" max="100" value="69">
+                    <input type="number" id="lightness-input" min="0" max="100" value="69">
+                </div>
+            </div>
+        </div>
+        
+        <div class="copy-buttons">
+            <button id="copy-hex" class="copy-btn">复制 HEX</button>
+            <button id="copy-rgb" class="copy-btn">复制 RGB</button>
+            <button id="copy-hsl" class="copy-btn">复制 HSL</button>
+        </div>
+    </div>
+    
+    <a href="toolbox.html" class="back-home">返回工具箱</a>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 获取所有需要的元素
+        const colorPicker = document.getElementById('color-picker');
+        const colorDisplay = document.getElementById('color-display');
+        const hexValue = document.getElementById('hex-value');
+        const rgbValue = document.getElementById('rgb-value');
+        const hslValue = document.getElementById('hsl-value');
+        const hexInput = document.getElementById('hex-input');
+        
+        const redRange = document.getElementById('red-range');
+        const greenRange = document.getElementById('green-range');
+        const blueRange = document.getElementById('blue-range');
+        const redInput = document.getElementById('red-input');
+        const greenInput = document.getElementById('green-input');
+        const blueInput = document.getElementById('blue-input');
+        
+        const hueRange = document.getElementById('hue-range');
+        const saturationRange = document.getElementById('saturation-range');
+        const lightnessRange = document.getElementById('lightness-range');
+        const hueInput = document.getElementById('hue-input');
+        const saturationInput = document.getElementById('saturation-input');
+        const lightnessInput = document.getElementById('lightness-input');
+        
+        const copyHexBtn = document.getElementById('copy-hex');
+        const copyRgbBtn = document.getElementById('copy-rgb');
+        const copyHslBtn = document.getElementById('copy-hsl');
+        
+        const paletteColors = document.querySelectorAll('.palette-color');
+        
+        // 标记是否正在更新，防止无限循环
+        let isUpdating = false;
+        
+        // 更新所有颜色显示和输入值
+        function updateColorDisplay(color) {
+            if (isUpdating) return;
+            isUpdating = true;
+            
+            // 从HEX解析RGB值
+            let r, g, b;
+            
+            if (color.startsWith('#')) {
+                // 处理HEX
+                const hex = color.replace('#', '');
+                if (hex.length === 3) {
+                    r = parseInt(hex[0] + hex[0], 16);
+                    g = parseInt(hex[1] + hex[1], 16);
+                    b = parseInt(hex[2] + hex[2], 16);
+                } else {
+                    r = parseInt(hex.substr(0, 2), 16);
+                    g = parseInt(hex.substr(2, 2), 16);
+                    b = parseInt(hex.substr(4, 2), 16);
+                }
+            } else if (color.startsWith('rgb')) {
+                // 处理RGB
+                const matches = color.match(/\d+/g);
+                r = parseInt(matches[0]);
+                g = parseInt(matches[1]);
+                b = parseInt(matches[2]);
+            } else {
+                // 默认颜色
+                r = 108;
+                g = 99;
+                b = 255;
+            }
+            
+            // 更新RGB范围和输入
+            redRange.value = r;
+            greenRange.value = g;
+            blueRange.value = b;
+            redInput.value = r;
+            greenInput.value = g;
+            blueInput.value = b;
+            
+            // 计算HEX值
+            const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
+            
+            // 计算HSL值
+            const hsl = rgbToHsl(r, g, b);
+            const h = Math.round(hsl[0]);
+            const s = Math.round(hsl[1]);
+            const l = Math.round(hsl[2]);
+            
+            // 更新HSL范围和输入
+            hueRange.value = h;
+            saturationRange.value = s;
+            lightnessRange.value = l;
+            hueInput.value = h;
+            saturationInput.value = s;
+            lightnessInput.value = l;
+            
+            // 更新颜色显示
+            colorDisplay.style.backgroundColor = hex;
+            colorPicker.value = hex;
+            hexInput.value = hex;
+            
+            // 更新颜色值显示
+            hexValue.textContent = hex;
+            rgbValue.textContent = `RGB(${r}, ${g}, ${b})`;
+            hslValue.textContent = `HSL(${h}, ${s}%, ${l}%)`;
+            
+            // 根据颜色亮度决定文字颜色
+            const textColor = l > 60 ? '#000' : '#fff';
+            colorDisplay.style.color = textColor;
+            
+            // 高亮调色板中的选中颜色
+            paletteColors.forEach(color => {
+                if (color.getAttribute('data-color').toUpperCase() === hex) {
+                    color.classList.add('selected');
+                } else {
+                    color.classList.remove('selected');
+                }
+            });
+            
+            isUpdating = false;
+        }
+        
+        // RGB转HSL
+        function rgbToHsl(r, g, b) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+            
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            
+            if (max === min) {
+                h = s = 0; // 无彩色
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                
+                h /= 6;
+            }
+            
+            return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
+        }
+        
+        // HSL转RGB
+        function hslToRgb(h, s, l) {
+            h /= 360;
+            s /= 100;
+            l /= 100;
+            
+            let r, g, b;
+            
+            if (s === 0) {
+                r = g = b = l; // 无彩色
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+        
+        // 复制到剪贴板函数
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`已复制：${text} 喵～`);
+            }).catch(err => {
+                console.error('无法复制: ', err);
+            });
+        }
+        
+        // 事件监听器
+        colorPicker.addEventListener('input', () => {
+            updateColorDisplay(colorPicker.value);
+        });
+        
+        hexInput.addEventListener('input', () => {
+            let value = hexInput.value.trim();
+            if (!value.startsWith('#')) {
+                value = '#' + value;
+            }
+            
+            // 仅在输入完整的3位或6位HEX值时更新
+            if (/^#([0-9A-F]{3}){1,2}$/i.test(value)) {
+                updateColorDisplay(value);
+            } else if (value === '#') { // 允许用户清空输入框
+                // 不做任何操作，等待用户继续输入
+            } else {
+                // 对于无效或不完整的输入，可以暂时不更新，或者给用户提示
+                console.log('请输入有效的3位或6位HEX颜色值喵～');
+            }
+        });
+        
+        // RGB值变化
+        [redRange, greenRange, blueRange].forEach(slider => {
+            slider.addEventListener('input', () => {
+                const r = parseInt(redRange.value);
+                const g = parseInt(greenRange.value);
+                const b = parseInt(blueRange.value);
+                
+                // 更新对应的数字输入框
+                redInput.value = r;
+                greenInput.value = g;
+                blueInput.value = b;
+                
+                const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+                updateColorDisplay(hex);
+            });
+        });
+        
+        // RGB数字输入
+        [redInput, greenInput, blueInput].forEach(input => {
+            input.addEventListener('input', () => {
+                const r = Math.min(255, Math.max(0, parseInt(redInput.value) || 0));
+                const g = Math.min(255, Math.max(0, parseInt(greenInput.value) || 0));
+                const b = Math.min(255, Math.max(0, parseInt(blueInput.value) || 0));
+                
+                // 更新对应的滑块
+                redRange.value = r;
+                greenRange.value = g;
+                blueRange.value = b;
+                
+                const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+                updateColorDisplay(hex);
+            });
+        });
+        
+        // HSL值变化
+        [hueRange, saturationRange, lightnessRange].forEach(slider => {
+            slider.addEventListener('input', () => {
+                const h = parseInt(hueRange.value);
+                const s = parseInt(saturationRange.value);
+                const l = parseInt(lightnessRange.value);
+                
+                // 更新对应的数字输入框
+                hueInput.value = h;
+                saturationInput.value = s;
+                lightnessInput.value = l;
+                
+                const rgb = hslToRgb(h, s, l);
+                const r = rgb[0], g = rgb[1], b = rgb[2];
+                const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+                updateColorDisplay(hex);
+            });
+        });
+        
+        // HSL数字输入
+        [hueInput, saturationInput, lightnessInput].forEach(input => {
+            input.addEventListener('input', () => {
+                const h = Math.min(360, Math.max(0, parseInt(hueInput.value) || 0));
+                const s = Math.min(100, Math.max(0, parseInt(saturationInput.value) || 0));
+                const l = Math.min(100, Math.max(0, parseInt(lightnessInput.value) || 0));
+                
+                // 更新对应的滑块
+                hueRange.value = h;
+                saturationRange.value = s;
+                lightnessRange.value = l;
+                
+                const rgb = hslToRgb(h, s, l);
+                const r = rgb[0], g = rgb[1], b = rgb[2];
+                const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+                updateColorDisplay(hex);
+            });
+        });
+        
+        // 调色板点击
+        paletteColors.forEach(colorEl => {
+            colorEl.addEventListener('click', () => {
+                const color = colorEl.getAttribute('data-color');
+                updateColorDisplay(color);
+            });
+        });
+        
+        // 复制按钮
+        copyHexBtn.addEventListener('click', () => {
+            copyToClipboard(hexValue.textContent);
+        });
+        
+        copyRgbBtn.addEventListener('click', () => {
+            copyToClipboard(rgbValue.textContent);
+        });
+        
+        copyHslBtn.addEventListener('click', () => {
+            copyToClipboard(hslValue.textContent);
+        });
+        
+        // 初始化显示
+        updateColorDisplay('#6c63ff');
+    });
+</script>
+
+<script src="script.js"></script>
+</body>
+</html>

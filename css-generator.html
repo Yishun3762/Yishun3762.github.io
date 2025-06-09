@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS动画生成器 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .generator-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .controls-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .controls-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .control-group h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        
+        input[type="color"] {
+            height: 40px;
+        }
+        
+        .preview-section {
+            margin: 2rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .preview-box {
+            width: 200px;
+            height: 200px;
+            background-color: var(--primary-color);
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .code-output {
+            background: #282c34;
+            border-radius: 8px;
+            padding: 1.5rem;
+            width: 100%;
+            overflow-x: auto;
+            color: #abb2bf;
+            font-family: monospace;
+            position: relative;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .action-btn {
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .back-home {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+        
+        .back-home:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .advanced-section {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .advanced-section h4 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+
+        /* Enhanced Color Input Styling */
+        .color-input-group {
+            margin-bottom: 1rem;
+        }
+
+        .color-input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1rem; /* Add margin below each color input group */
+        }
+
+        .color-input-wrapper input[type="color"] {
+            width: 45px; /* Slightly smaller color picker */
+            height: 45px;
+            padding: 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            flex-shrink: 0; /* Prevent picker from shrinking */
+            margin-bottom: 0;
+        }
+
+        .color-input-wrapper input[type="text"] {
+            flex-grow: 1;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem; /* Slightly smaller font */
+            font-family: monospace;
+            margin-bottom: 0;
+        }
+
+        /* Override default input margin */
+        input, select {
+             margin-bottom: 0; /* Remove default bottom margin */
+        }
+        /* Add margin to non-color inputs via their container/label */
+        label + input[type="text"]:not(.color-text-input),
+        label + input[type="number"],
+        label + select {
+            margin-bottom: 1rem;
+        }
+
+        /* Gradient Stop Slider Styling */
+        .gradient-stop-group {
+            margin-top: 1rem;
+            margin-bottom: 1rem; /* Consistent margin */
+        }
+
+        .gradient-stop-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .gradient-stop-wrapper input[type="range"] {
+            flex-grow: 1;
+            margin-bottom: 0;
+        }
+
+        .gradient-stop-percentage {
+            font-weight: 500;
+            min-width: 40px; /* Ensure space for percentage */
+            text-align: right;
+        }
+
+        /* Text Alignment Styling */
+        .text-alignment-group {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .alignment-options {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .alignment-options .control-group {
+            flex: 1;
+            margin-bottom: 0; /* Remove margin within flex group */
+        }
+        .alignment-options label {
+             margin-bottom: 0.5rem;
+        }
+        .alignment-options select {
+            margin-bottom: 0; /* Remove margin within flex group */
+        }
+
+    </style>
+</head>
+<body>
+<div class="cursor-follower"></div>
+
+<div class="sidebar">
+    <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+    <div class="bio">
+        <h2>AsagiYuumoya</h2>
+        <p>人活着就是为了二次元！</p>
+    </div>
+
+    <ul class="nav">
+        <li><a href="index.html">主页</a></li>
+        <li><a href="https://github.com/Yishun3762">关于</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+        <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+        <li><a href="toolbox.html">工具箱</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <h1>CSS动画生成器喵～</h1>
+    <p>选择你喜欢的动画效果和参数，生成CSS代码喵～快来让你的网页元素动起来喵～</p>
+    
+    <div class="generator-container">
+        <div class="controls-section">
+            <div class="control-group">
+                <h3>基本设置</h3>
+                <label for="element-type">元素类型</label>
+                <select id="element-type">
+                    <option value="div">div</option>
+                    <option value="button">button</option>
+                    <option value="img">img</option>
+                    <option value="span">span</option>
+                </select>
+                
+                <label for="element-text">元素内文本 (可选)</label>
+                <input type="text" id="element-text" placeholder="喵喵喵~">
+
+                <label for="element-width">宽度 (px)</label>
+                <input type="number" id="element-width" value="200" min="10" max="500">
+                
+                <label for="element-height">高度 (px)</label>
+                <input type="number" id="element-height" value="200" min="10" max="500">
+                
+                <div class="color-input-group">
+                    <label class="color-input-label">背景颜色</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="element-color" value="#6c63ff">
+                        <input type="text" id="element-color-text" class="color-text-input" value="#6c63ff" placeholder="#RRGGBB 或 rgb(r,g,b)">
+                    </div>
+                </div>
+                
+                <div class="color-input-group">
+                    <label class="color-input-label">文本颜色 (可选)</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="text-color" value="#ffffff">
+                        <input type="text" id="text-color-text" class="color-text-input" value="#ffffff" placeholder="#RRGGBB 或 rgb(r,g,b)">
+                    </div>
+                </div>
+
+                <label for="border-radius">圆角半径 (px)</label>
+                <input type="number" id="border-radius" value="8" min="0" max="100">
+
+                <div class="text-alignment-group">
+                    <label>文字对齐</label>
+                    <div class="alignment-options">
+                        <div class="control-group">
+                            <label for="text-align-h">水平对齐</label>
+                            <select id="text-align-h">
+                                <option value="center">居中</option>
+                                <option value="left">左对齐</option>
+                                <option value="right">右对齐</option>
+                                <option value="justify">两端对齐</option> 
+                            </select>
+                        </div>
+                         <div class="control-group">
+                            <label for="text-align-v">垂直对齐</label>
+                            <select id="text-align-v">
+                                <option value="center">居中</option>
+                                <option value="flex-start">顶部对齐</option>
+                                <option value="flex-end">底部对齐</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>动画设置</h3>
+                <label for="animation-type">动画类型</label>
+                <select id="animation-type">
+                    <option value="none">无动画</option>
+                    <option value="fade">淡入淡出</option>
+                    <option value="pulse">脉冲</option>
+                    <option value="rotate">旋转</option>
+                    <option value="bounce">弹跳</option>
+                    <option value="shake">抖动</option>
+                    <option value="slide">滑动</option>
+                    <option value="flip">翻转</option>
+                </select>
+                
+                <label for="animation-duration">动画持续时间 (秒)</label>
+                <input type="number" id="animation-duration" value="1.5" min="0.1" max="10" step="0.1">
+                
+                <label for="animation-delay">动画延迟 (秒)</label>
+                <input type="number" id="animation-delay" value="0" min="0" max="10" step="0.1">
+                
+                <label for="animation-iterations">重复次数</label>
+                <select id="animation-iterations">
+                    <option value="1">1次</option>
+                    <option value="2">2次</option>
+                    <option value="3">3次</option>
+                    <option value="infinite">无限循环</option>
+                </select>
+                
+                <label for="timing-function">缓动函数</label>
+                <select id="timing-function">
+                    <option value="linear">线性 (linear)</option>
+                    <option value="ease">平滑 (ease)</option>
+                    <option value="ease-in">渐入 (ease-in)</option>
+                    <option value="ease-out">渐出 (ease-out)</option>
+                    <option value="ease-in-out">渐入渐出 (ease-in-out)</option>
+                    <option value="cubic-bezier(0.68, -0.55, 0.27, 1.55)">弹性 (cubic-bezier)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <h3>高级样式</h3>
+                <div class="advanced-section">
+                    <h4>渐变背景</h4>
+                    <label for="gradient-enable">启用渐变背景</label>
+                    <select id="gradient-enable">
+                        <option value="no">否</option>
+                        <option value="yes">是</option>
+                    </select>
+                    
+                    <div id="gradient-options" style="display: none;">
+                        <label for="gradient-type">渐变类型</label>
+                        <select id="gradient-type">
+                            <option value="linear">线性渐变</option>
+                            <option value="radial">径向渐变</option>
+                        </select>
+                        
+                        <label for="gradient-direction">渐变方向 (线性)</label>
+                        <select id="gradient-direction">
+                            <option value="to right">从左到右</option>
+                            <option value="to bottom">从上到下</option>
+                            <option value="to bottom right">从左上到右下</option>
+                            <option value="to bottom left">从右上到左下</option>
+                        </select>
+                        
+                        <div class="gradient-stop-group" id="linear-gradient-stop-group"> <!-- ID for JS targeting -->
+                            <label for="gradient-stop">颜色1 停止位置 (%)</label>
+                            <div class="gradient-stop-wrapper">
+                                <input type="range" id="gradient-stop" min="0" max="100" value="50">
+                                <span id="gradient-stop-percentage" class="gradient-stop-percentage">50%</span>
+                            </div>
+                        </div>
+
+                        <div class="color-input-group">
+                            <label class="color-input-label">渐变颜色 1</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="gradient-color-1" value="#6c63ff">
+                                <input type="text" id="gradient-color-1-text" class="color-text-input" value="#6c63ff" placeholder="#RRGGBB 或 rgb(r,g,b)">
+                            </div>
+                        </div>
+                        
+                        <div class="color-input-group">
+                            <label class="color-input-label">渐变颜色 2</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="gradient-color-2" value="#ff6584">
+                                <input type="text" id="gradient-color-2-text" class="color-text-input" value="#ff6584" placeholder="#RRGGBB 或 rgb(r,g,b)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="advanced-section">
+                    <h4>阴影</h4>
+                    <label for="shadow-enable">启用阴影</label>
+                    <select id="shadow-enable">
+                        <option value="no">否</option>
+                        <option value="yes">是</option>
+                    </select>
+                    
+                    <div id="shadow-options" style="display: none;">
+                        <label for="shadow-x">X偏移量 (px)</label>
+                        <input type="number" id="shadow-x" value="5" min="-20" max="20">
+                        
+                        <label for="shadow-y">Y偏移量 (px)</label>
+                        <input type="number" id="shadow-y" value="5" min="-20" max="20">
+                        
+                        <label for="shadow-blur">模糊半径 (px)</label>
+                        <input type="number" id="shadow-blur" value="10" min="0" max="50">
+                        
+                        <div class="color-input-group">
+                            <label class="color-input-label">阴影颜色</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="shadow-color" value="#00000080">
+                                <input type="text" id="shadow-color-text" class="color-text-input" value="#00000080" placeholder="#RRGGBBAA 或 rgba(r,g,b,a)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advanced-section">
+                    <h4>毛玻璃效果 (Backdrop Filter)</h4>
+                    <label for="backdrop-filter-enable">启用毛玻璃</label>
+                    <select id="backdrop-filter-enable">
+                        <option value="no">否</option>
+                        <option value="yes">是</option>
+                    </select>
+                    <div id="backdrop-filter-options" style="display: none;">
+                        <label for="backdrop-blur">模糊半径 (px)</label>
+                        <input type="number" id="backdrop-blur" value="5" min="0" max="30">
+                        <label for="backdrop-brightness">亮度 (%)</label>
+                        <input type="range" id="backdrop-brightness" min="50" max="150" value="100">
+                        <span id="backdrop-brightness-value">100%</span>
+                        <label for="backdrop-saturate">饱和度 (%)</label>
+                        <input type="range" id="backdrop-saturate" min="0" max="200" value="100">
+                         <span id="backdrop-saturate-value">100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>交互效果</h3>
+                <div class="advanced-section">
+                    <h4>悬停效果 (Hover)</h4>
+                    <label for="hover-enable">启用悬停效果</label>
+                    <select id="hover-enable">
+                        <option value="no">否</option>
+                        <option value="yes">是</option>
+                    </select>
+
+                    <div id="hover-options" style="display: none;">
+                        <div class="color-input-group">
+                            <label class="color-input-label">悬停背景颜色 (可选)</label>
+                             <div class="color-input-wrapper">
+                                <input type="color" id="hover-background" value="#ff6584">
+                                <input type="text" id="hover-background-text" class="color-text-input" value="#ff6584" placeholder="#RRGGBB 或 rgb(r,g,b)">
+                            </div>
+                        </div>
+
+                        <div class="color-input-group">
+                            <label class="color-input-label">悬停文本颜色 (可选)</label>
+                             <div class="color-input-wrapper">
+                                <input type="color" id="hover-text-color" value="#ffffff">
+                                <input type="text" id="hover-text-color-text" class="color-text-input" value="#ffffff" placeholder="#RRGGBB 或 rgb(r,g,b)">
+                            </div>
+                        </div>
+
+                        <label for="hover-transform">悬停变换</label>
+                        <select id="hover-transform">
+                            <option value="none">无</option>
+                            <option value="scale(1.1)">放大</option>
+                            <option value="translateY(-5px)">上移</option>
+                            <option value="rotate(5deg)">旋转</option>
+                        </select>
+
+                        <label for="hover-shadow-enable">启用悬停阴影</label>
+                        <select id="hover-shadow-enable">
+                            <option value="no">否</option>
+                            <option value="yes">是</option>
+                        </select>
+                        <div id="hover-shadow-options" style="display: none;">
+                            <label for="hover-shadow-x">悬停X偏移 (px)</label>
+                            <input type="number" id="hover-shadow-x" value="8" min="-20" max="20">
+                            <label for="hover-shadow-y">悬停Y偏移 (px)</label>
+                            <input type="number" id="hover-shadow-y" value="8" min="-20" max="20">
+                            <label for="hover-shadow-blur">悬停模糊 (px)</label>
+                            <input type="number" id="hover-shadow-blur" value="15" min="0" max="50">
+                            
+                            <div class="color-input-group">
+                                <label class="color-input-label">悬停阴影颜色</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="hover-shadow-color" value="#00000099">
+                                    <input type="text" id="hover-shadow-color-text" class="color-text-input" value="#00000099" placeholder="#RRGGBBAA 或 rgba(r,g,b,a)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="advanced-section">
+                    <h4>过渡效果 (Transition)</h4>
+                    <label for="transition-enable">启用过渡效果</label>
+                    <select id="transition-enable">
+                        <option value="no">否</option>
+                        <option value="yes">是</option>
+                    </select>
+                    <div id="transition-options" style="display: none;">
+                        <label for="transition-property">过渡属性</label>
+                        <select id="transition-property">
+                            <option value="all">所有属性 (all)</option>
+                            <option value="background-color">背景颜色</option>
+                            <option value="transform">变换</option>
+                            <option value="box-shadow">阴影</option>
+                            <option value="opacity">透明度</option>
+                        </select>
+                        <label for="transition-duration">过渡持续时间 (秒)</label>
+                        <input type="number" id="transition-duration" value="0.3" min="0.1" max="5" step="0.1">
+                        <label for="transition-timing-function">过渡缓动函数</label>
+                        <select id="transition-timing-function">
+                            <option value="ease">平滑 (ease)</option>
+                            <option value="linear">线性 (linear)</option>
+                            <option value="ease-in">渐入 (ease-in)</option>
+                            <option value="ease-out">渐出 (ease-out)</option>
+                            <option value="ease-in-out">渐入渐出 (ease-in-out)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="preview-section">
+            <h3>预览</h3>
+            <div id="preview-box" class="preview-box"></div>
+            
+            <h3>CSS代码</h3>
+            <div class="code-output">
+                <button id="copy-btn" class="copy-btn">复制</button>
+                <pre id="css-code">/* 请先生成CSS代码喵～ */</pre>
+            </div>
+            
+            <div class="button-group">
+                <button id="generate-btn" class="action-btn">生成CSS代码</button>
+                <button id="reset-btn" class="action-btn">重置设置</button>
+            </div>
+        </div>
+    </div>
+    
+    <a href="toolbox.html" class="back-home">返回工具箱</a>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 获取所有控制元素 (包括新增的文本输入框)
+        const elementType = document.getElementById('element-type');
+        const elementText = document.getElementById('element-text'); 
+        const elementWidth = document.getElementById('element-width');
+        const elementHeight = document.getElementById('element-height');
+        const elementColor = document.getElementById('element-color');
+        const elementColorText = document.getElementById('element-color-text'); // New text input
+        const textColor = document.getElementById('text-color'); 
+        const textColorText = document.getElementById('text-color-text'); // New text input
+        const borderRadius = document.getElementById('border-radius');
+        const textAlignH = document.getElementById('text-align-h'); // New: Horizontal align
+        const textAlignV = document.getElementById('text-align-v'); // New: Vertical align
+        
+        const animationType = document.getElementById('animation-type');
+        const animationDuration = document.getElementById('animation-duration');
+        const animationDelay = document.getElementById('animation-delay');
+        const animationIterations = document.getElementById('animation-iterations');
+        const timingFunction = document.getElementById('timing-function');
+        
+        const gradientEnable = document.getElementById('gradient-enable');
+        const gradientOptions = document.getElementById('gradient-options');
+        const gradientType = document.getElementById('gradient-type');
+        const gradientDirection = document.getElementById('gradient-direction');
+        const gradientColor1 = document.getElementById('gradient-color-1');
+        const gradientColor1Text = document.getElementById('gradient-color-1-text'); // New text input
+        const gradientColor2 = document.getElementById('gradient-color-2');
+        const gradientColor2Text = document.getElementById('gradient-color-2-text'); // New text input
+        const linearGradientStopGroup = document.getElementById('linear-gradient-stop-group'); // New group for slider
+        const gradientStopSlider = document.getElementById('gradient-stop'); // New slider
+        const gradientStopPercentage = document.getElementById('gradient-stop-percentage'); // New percentage display
+        
+        const shadowEnable = document.getElementById('shadow-enable');
+        const shadowOptions = document.getElementById('shadow-options');
+        const shadowX = document.getElementById('shadow-x');
+        const shadowY = document.getElementById('shadow-y');
+        const shadowBlur = document.getElementById('shadow-blur');
+        const shadowColor = document.getElementById('shadow-color');
+        const shadowColorText = document.getElementById('shadow-color-text'); // New text input
+        
+        const hoverEnable = document.getElementById('hover-enable');
+        const hoverOptions = document.getElementById('hover-options');
+        const hoverBackground = document.getElementById('hover-background');
+        const hoverBackgroundText = document.getElementById('hover-background-text'); // New text input
+        const hoverTextColor = document.getElementById('hover-text-color');
+        const hoverTextColorText = document.getElementById('hover-text-color-text'); // New text input
+        const hoverTransform = document.getElementById('hover-transform');
+        const hoverShadowEnable = document.getElementById('hover-shadow-enable');
+        const hoverShadowOptions = document.getElementById('hover-shadow-options');
+        const hoverShadowX = document.getElementById('hover-shadow-x');
+        const hoverShadowY = document.getElementById('hover-shadow-y');
+        const hoverShadowBlur = document.getElementById('hover-shadow-blur');
+        const hoverShadowColor = document.getElementById('hover-shadow-color');
+        const hoverShadowColorText = document.getElementById('hover-shadow-color-text'); // New text input
+
+        const transitionEnable = document.getElementById('transition-enable');
+        const transitionOptions = document.getElementById('transition-options');
+        const transitionProperty = document.getElementById('transition-property');
+        const transitionDuration = document.getElementById('transition-duration');
+        const transitionTimingFunction = document.getElementById('transition-timing-function');
+
+        const previewBox = document.getElementById('preview-box');
+        const cssCode = document.getElementById('css-code');
+        const generateBtn = document.getElementById('generate-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const copyBtn = document.getElementById('copy-btn');
+
+        // New: Backdrop filter elements
+        const backdropFilterEnable = document.getElementById('backdrop-filter-enable');
+        const backdropFilterOptions = document.getElementById('backdrop-filter-options');
+        const backdropBlur = document.getElementById('backdrop-blur');
+        const backdropBrightness = document.getElementById('backdrop-brightness');
+        const backdropBrightnessValue = document.getElementById('backdrop-brightness-value');
+        const backdropSaturate = document.getElementById('backdrop-saturate');
+        const backdropSaturateValue = document.getElementById('backdrop-saturate-value');
+
+        // --- Helper Functions ---
+        // Validate and normalize color (accepts HEX, RGB, RGBA)
+        function normalizeColor(input) {
+            input = input.trim();
+            // Basic HEX validation (allows 3, 4, 6, 8 digits)
+            if (/^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(input)) {
+                return input;
+            }
+            // Basic RGB/RGBA validation
+            if (/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(,\s*(0|1|0?\.\d+))?\s*\)$/.test(input)) {
+                return input;
+            }
+            return null; // Invalid color
+        }
+
+        // Convert any valid color string to HEX (or HEXA)
+        function toHex(colorStr) {
+            if (!colorStr) return '#000000';
+            colorStr = colorStr.trim();
+            if (colorStr.startsWith('#')) {
+                 // Already hex, ensure 6 digits if possible (ignoring alpha for color picker)
+                let hex = colorStr.substring(1);
+                 if (hex.length === 3) return `#${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`; 
+                 if (hex.length === 4) return `#${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`; // Ignore alpha for picker
+                 if (hex.length === 8) return `#${hex.substring(0, 6)}`; // Ignore alpha for picker
+                 return colorStr.substring(0, 7); // Assume 6 digit hex
+            }
+            if (colorStr.startsWith('rgb')) {
+                const parts = colorStr.match(/\d+/g);
+                if (!parts || parts.length < 3) return '#000000';
+                const r = parseInt(parts[0]).toString(16).padStart(2, '0');
+                const g = parseInt(parts[1]).toString(16).padStart(2, '0');
+                const b = parseInt(parts[2]).toString(16).padStart(2, '0');
+                return `#${r}${g}${b}`.toUpperCase();
+            }
+            return '#000000'; // Fallback
+        }
+
+        // Sync Color Picker and Text Input
+        function setupColorSync(colorPickerEl, textInputEl) {
+            colorPickerEl.addEventListener('input', () => {
+                textInputEl.value = colorPickerEl.value;
+                updatePreview();
+            });
+
+            textInputEl.addEventListener('input', () => {
+                const normalizedColor = normalizeColor(textInputEl.value);
+                if (normalizedColor) {
+                    // Convert valid input to HEX for the color picker
+                    colorPickerEl.value = toHex(normalizedColor); 
+                } else {
+                    // Optionally provide feedback for invalid input
+                     console.log(`无效的颜色值喵: ${textInputEl.value}`);
+                }
+                updatePreview();
+            });
+             // Initialize text input from picker
+             textInputEl.value = colorPickerEl.value;
+        }
+
+        // Setup sync for all color pairs
+        setupColorSync(elementColor, elementColorText);
+        setupColorSync(textColor, textColorText);
+        setupColorSync(gradientColor1, gradientColor1Text);
+        setupColorSync(gradientColor2, gradientColor2Text);
+        setupColorSync(shadowColor, shadowColorText);
+        setupColorSync(hoverBackground, hoverBackgroundText);
+        setupColorSync(hoverTextColor, hoverTextColorText);
+        setupColorSync(hoverShadowColor, hoverShadowColorText);
+        
+        // Update Gradient Stop Percentage Display and show/hide slider based on type
+        gradientStopSlider.addEventListener('input', () => {
+            gradientStopPercentage.textContent = `${gradientStopSlider.value}%`;
+            updatePreview();
+        });
+
+        gradientType.addEventListener('change', () => {
+            linearGradientStopGroup.style.display = gradientType.value === 'linear' ? 'block' : 'none';
+            updatePreview();
+        });
+
+        // 高级选项显示控制 (Existing code...)
+        gradientEnable.addEventListener('change', () => {
+            const display = gradientEnable.value === 'yes' ? 'block' : 'none';
+            gradientOptions.style.display = display;
+            // Also control visibility of the stop slider group based on gradient type
+            if (display === 'block') {
+                linearGradientStopGroup.style.display = gradientType.value === 'linear' ? 'block' : 'none';
+            } else {
+                 linearGradientStopGroup.style.display = 'none';
+            }
+            updatePreview();
+        });
+        shadowEnable.addEventListener('change', () => {
+            shadowOptions.style.display = shadowEnable.value === 'yes' ? 'block' : 'none';
+            updatePreview();
+        });
+        hoverEnable.addEventListener('change', () => {
+            hoverOptions.style.display = hoverEnable.value === 'yes' ? 'block' : 'none';
+            updatePreview();
+        });
+        hoverShadowEnable.addEventListener('change', () => {
+            hoverShadowOptions.style.display = hoverShadowEnable.value === 'yes' ? 'block' : 'none';
+            updatePreview();
+        });
+        transitionEnable.addEventListener('change', () => {
+            transitionOptions.style.display = transitionEnable.value === 'yes' ? 'block' : 'none';
+            updatePreview();
+        });
+        
+        // Show/hide backdrop filter options
+        backdropFilterEnable.addEventListener('change', () => {
+            backdropFilterOptions.style.display = backdropFilterEnable.value === 'yes' ? 'block' : 'none';
+            updatePreview();
+        });
+        // Update backdrop brightness/saturate value display
+        backdropBrightness.addEventListener('input', () => {
+            backdropBrightnessValue.textContent = `${backdropBrightness.value}%`;
+            updatePreview();
+        });
+         backdropSaturate.addEventListener('input', () => {
+            backdropSaturateValue.textContent = `${backdropSaturate.value}%`;
+            updatePreview();
+        });
+        
+        // 定义动画关键帧 (Existing code...)
+        const animations = {
+            fade: `@keyframes fade {\n    0% { opacity: 0; }\n    100% { opacity: 1; }\n}`,
+            pulse: `@keyframes pulse {\n    0% { transform: scale(1); }\n    50% { transform: scale(1.1); }\n    100% { transform: scale(1); }\n}`,
+            rotate: `@keyframes rotate {\n    0% { transform: rotate(0deg); }\n    100% { transform: rotate(360deg); }\n}`,
+            bounce: `@keyframes bounce {\n    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }\n    40% { transform: translateY(-30px); }\n    60% { transform: translateY(-15px); }\n}`,
+            shake: `@keyframes shake {\n    0%, 100% { transform: translateX(0); }\n    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }\n    20%, 40%, 60%, 80% { transform: translateX(10px); }\n}`,
+            slide: `@keyframes slide {\n    0% { transform: translateX(-100%); }\n    100% { transform: translateX(0); }\n}`,
+            flip: `@keyframes flip {\n    0% { transform: perspective(400px) rotateY(0); }\n    100% { transform: perspective(400px) rotateY(360deg); }\n}`
+        };
+        
+        // 生成CSS代码
+        function generateCSS() {
+            let css = '';
+            
+            // Helper to get color value, preferring text input if valid
+            const getColorValue = (textInput) => normalizeColor(textInput.value) || '#000000'; // Default to black if invalid
+
+            // 基本样式
+            css += `.element {\n`;
+            css += `    width: ${elementWidth.value}px;\n`;
+            css += `    height: ${elementHeight.value}px;\n`;
+            css += `    color: ${getColorValue(textColorText)};\n`; 
+            css += `    display: flex;\n`; // Use flex for alignment
+            css += `    align-items: ${textAlignV.value};\n`; // Vertical align
+            css += `    justify-content: ${textAlignH.value === 'justify' ? 'space-between' : textAlignH.value};\n`; // Horizontal align (adjust justify)
+            css += `    text-align: ${textAlignH.value};\n`; // Text align for block elements
+            css += `    padding: 0.5rem; \n`;
+            
+            // --- Background & Backdrop Filter --- 
+            if (backdropFilterEnable.value === 'yes') {
+                // 1. Apply backdrop filter properties
+                let filterValue = '';
+                if (parseFloat(backdropBlur.value) > 0) filterValue += ` blur(${backdropBlur.value}px)`;
+                if (backdropBrightness.value !== '100') filterValue += ` brightness(${backdropBrightness.value}%)`;
+                if (backdropSaturate.value !== '100') filterValue += ` saturate(${backdropSaturate.value}%)`;
+                if (filterValue) {
+                     css += `    backdrop-filter:${filterValue.trim()};\n`;
+                     css += `    -webkit-backdrop-filter:${filterValue.trim()};\n`; // For Safari
+                }
+
+                // 2. Ensure background has transparency
+                let baseColor = getColorValue(elementColorText); // Get user's chosen bg color
+                let bgWithAlpha = '';
+                // Try to convert user's color to have alpha, default to a semi-transparent white if invalid/opaque
+                 if (baseColor.startsWith('#')) {
+                    if (baseColor.length === 9) { // #RRGGBBAA
+                        bgWithAlpha = baseColor;
+                    } else if (baseColor.length === 7) { // #RRGGBB
+                        bgWithAlpha = baseColor + '80'; // Add 50% alpha
+                    } else if (baseColor.length === 5) { // #RGBA (Convert to #RRGGBBAA)
+                         bgWithAlpha = `#${baseColor[1]}${baseColor[1]}${baseColor[2]}${baseColor[2]}${baseColor[3]}${baseColor[3]}${baseColor[4]}${baseColor[4]}`;
+                    } else if (baseColor.length === 4) { // #RGB (Convert to #RRGGBB80)
+                         bgWithAlpha = `#${baseColor[1]}${baseColor[1]}${baseColor[2]}${baseColor[2]}${baseColor[3]}${baseColor[3]}80`;
+                    } else {
+                         bgWithAlpha = 'rgba(255, 255, 255, 0.5)'; // Fallback
+                    }
+                } else if (baseColor.startsWith('rgba')) { // Already has alpha
+                    bgWithAlpha = baseColor;
+                } else if (baseColor.startsWith('rgb')) { // Add alpha
+                    bgWithAlpha = baseColor.replace('rgb(', 'rgba(').replace(')', ', 0.5)');
+                } else {
+                    bgWithAlpha = 'rgba(255, 255, 255, 0.5)'; // Fallback
+                }
+                css += `    background-color: ${bgWithAlpha};\n`;
+
+            } else {
+                // Normal background/gradient if backdrop is OFF
+                if (gradientEnable.value === 'yes') {
+                    const gradColor1 = getColorValue(gradientColor1Text);
+                    const gradColor2 = getColorValue(gradientColor2Text);
+                    let gradientCSS = '';
+                    if (gradientType.value === 'linear') {
+                        const stop = gradientStopSlider.value;
+                        gradientCSS = `linear-gradient(${gradientDirection.value}, ${gradColor1} ${stop}%, ${gradColor2})`;
+                    } else {
+                        gradientCSS = `radial-gradient(circle, ${gradColor1}, ${gradColor2})`;
+                    }
+                    css += `    background: ${gradientCSS};\n`;
+                } else {
+                    css += `    background-color: ${getColorValue(elementColorText)};\n`;
+                }
+            }
+            // --- End Background & Backdrop Filter ---
+            
+            css += `    border-radius: ${borderRadius.value}px;\n`;
+            
+            // 阴影
+            if (shadowEnable.value === 'yes') {
+                css += `    box-shadow: ${shadowX.value}px ${shadowY.value}px ${shadowBlur.value}px ${getColorValue(shadowColorText)};\n`;
+            }
+            
+            // 过渡
+            if (transitionEnable.value === 'yes') {
+                css += `    transition: ${transitionProperty.value} ${transitionDuration.value}s ${transitionTimingFunction.value};\n`;
+            }
+
+            // 动画
+            if (animationType.value !== 'none') {
+                css += `    animation: ${animationType.value} ${animationDuration.value}s ${timingFunction.value} ${animationDelay.value}s ${animationIterations.value};\n`;
+            }
+            
+            css += `}\n\n`;
+            
+            // 悬停效果
+            if (hoverEnable.value === 'yes') {
+                css += `.element:hover {\n`;
+                css += `    background-color: ${getColorValue(hoverBackgroundText)};\n`;
+                css += `    color: ${getColorValue(hoverTextColorText)};\n`;
+                if (hoverTransform.value !== 'none') {
+                    css += `    transform: ${hoverTransform.value};\n`;
+                }
+                if (hoverShadowEnable.value === 'yes') {
+                     css += `    box-shadow: ${hoverShadowX.value}px ${hoverShadowY.value}px ${hoverShadowBlur.value}px ${getColorValue(hoverShadowColorText)};\n`;
+                }
+                css += `}\n\n`;
+            }
+
+            // 添加动画关键帧
+            if (animationType.value !== 'none') {
+                css += animations[animationType.value];
+            }
+            
+            return css;
+        }
+        
+        // 更新预览
+        function updatePreview() {
+            // Helper to get color value for preview, preferring text input if valid
+            const getPreviewColorValue = (textInput) => normalizeColor(textInput.value) || textInput.value; // Use picker value as fallback for preview
+
+            // 重置预览盒子样式
+            previewBox.removeAttribute('style');
+            previewBox.textContent = elementText.value || '预览喵';
+            
+            // 应用动态生成的样式（模拟CSS）
+            let inlineStyle = '';
+            inlineStyle += `width: ${elementWidth.value}px;`;
+            inlineStyle += `height: ${elementHeight.value}px;`;
+            inlineStyle += `color: ${getPreviewColorValue(textColorText)};`;
+            inlineStyle += `display: flex;`; // Use flex for alignment
+            inlineStyle += `align-items: ${textAlignV.value};`; // Vertical align
+            inlineStyle += `justify-content: ${textAlignH.value === 'justify' ? 'space-between' : textAlignH.value};`; // Horizontal align
+            inlineStyle += `text-align: ${textAlignH.value};`; // Text align
+            inlineStyle += `padding: 0.5rem; `;
+
+            // --- Background & Backdrop Filter Preview --- 
+            if (backdropFilterEnable.value === 'yes') {
+                 // 1. Apply backdrop filter properties to inline style
+                 let filterValue = '';
+                 if (parseFloat(backdropBlur.value) > 0) filterValue += ` blur(${backdropBlur.value}px)`;
+                 if (backdropBrightness.value !== '100') filterValue += ` brightness(${backdropBrightness.value}%)`;
+                 if (backdropSaturate.value !== '100') filterValue += ` saturate(${backdropSaturate.value}%)`;
+                 if (filterValue) {
+                     // Apply both standard and prefixed for broader preview compatibility (though might not work perfectly)
+                     inlineStyle += `backdrop-filter:${filterValue.trim()}; -webkit-backdrop-filter:${filterValue.trim()};`;
+                 }
+
+                 // 2. Ensure background has transparency for preview
+                 let baseColor = getPreviewColorValue(elementColorText);
+                 let bgWithAlpha = '';
+                 if (baseColor.startsWith('#')) {
+                    if (baseColor.length === 9) { bgWithAlpha = baseColor; }
+                    else if (baseColor.length === 7) { bgWithAlpha = baseColor + '80'; }
+                    else if (baseColor.length === 5) { bgWithAlpha = `#${baseColor[1]}${baseColor[1]}${baseColor[2]}${baseColor[2]}${baseColor[3]}${baseColor[3]}${baseColor[4]}${baseColor[4]}`; }
+                    else if (baseColor.length === 4) { bgWithAlpha = `#${baseColor[1]}${baseColor[1]}${baseColor[2]}${baseColor[2]}${baseColor[3]}${baseColor[3]}80`; }
+                    else { bgWithAlpha = 'rgba(255, 255, 255, 0.5)'; }
+                } else if (baseColor.startsWith('rgba')) { bgWithAlpha = baseColor; }
+                else if (baseColor.startsWith('rgb')) { bgWithAlpha = baseColor.replace('rgb(', 'rgba(').replace(')', ', 0.5)'); }
+                else { bgWithAlpha = 'rgba(255, 255, 255, 0.5)'; }
+                inlineStyle += `background-color: ${bgWithAlpha};`;
+
+            } else {
+                // Normal background/gradient preview if backdrop is OFF
+                if (gradientEnable.value === 'yes') {
+                    const gradColor1 = getPreviewColorValue(gradientColor1Text);
+                    const gradColor2 = getPreviewColorValue(gradientColor2Text);
+                    let gradientCSS = '';
+                     if (gradientType.value === 'linear') {
+                        const stop = gradientStopSlider.value;
+                        gradientCSS = `linear-gradient(${gradientDirection.value}, ${gradColor1} ${stop}%, ${gradColor2})`;
+                    } else {
+                        gradientCSS = `radial-gradient(circle, ${gradColor1}, ${gradColor2})`;
+                    }
+                    inlineStyle += `background: ${gradientCSS};`;
+                } else {
+                    inlineStyle += `background-color: ${getPreviewColorValue(elementColorText)};`;
+                }
+            }
+             // --- End Background & Backdrop Filter Preview ---
+            
+            inlineStyle += `border-radius: ${borderRadius.value}px;`;
+            
+            if (shadowEnable.value === 'yes') {
+                inlineStyle += `box-shadow: ${shadowX.value}px ${shadowY.value}px ${shadowBlur.value}px ${getPreviewColorValue(shadowColorText)};`;
+            }
+            
+            if (transitionEnable.value === 'yes') {
+                inlineStyle += `transition: ${transitionProperty.value} ${transitionDuration.value}s ${transitionTimingFunction.value};`;
+            }
+
+            // 清除之前的动画
+            previewBox.style.animation = '';
+            
+            // 应用新动画
+            if (animationType.value !== 'none') {
+                 // 动态创建并添加关键帧样式
+                const styleId = 'dynamic-keyframes';
+                let styleElement = document.getElementById(styleId);
+                if (!styleElement) {
+                    styleElement = document.createElement('style');
+                    styleElement.id = styleId;
+                    document.head.appendChild(styleElement);
+                }
+                if (animations[animationType.value]) {
+                    styleElement.textContent = animations[animationType.value];
+                }
+                
+                inlineStyle += `animation: ${animationType.value} ${animationDuration.value}s ${timingFunction.value} ${animationDelay.value}s ${animationIterations.value};`;
+            }
+            
+            previewBox.style.cssText = inlineStyle;
+
+            // 模拟悬停效果（通过添加/移除类） - Use preview values
+            previewBox.onmouseover = () => {
+                if (hoverEnable.value === 'yes') {
+                    previewBox.style.backgroundColor = getPreviewColorValue(hoverBackgroundText);
+                    previewBox.style.color = getPreviewColorValue(hoverTextColorText);
+                    if (hoverTransform.value !== 'none') {
+                         previewBox.style.transform = hoverTransform.value;
+                    }
+                    if (hoverShadowEnable.value === 'yes') {
+                        previewBox.style.boxShadow = `${hoverShadowX.value}px ${hoverShadowY.value}px ${hoverShadowBlur.value}px ${getPreviewColorValue(hoverShadowColorText)}`;
+                    }
+                }
+            };
+            previewBox.onmouseout = () => {
+                 // 恢复原始样式（从 inlineStyle 中提取）
+                 updatePreview(); // Reapply initial styles
+            };
+        }
+        
+        // 生成按钮点击事件
+        generateBtn.addEventListener('click', () => {
+            updatePreview();
+            cssCode.textContent = generateCSS();
+        });
+        
+        // 重置按钮点击事件
+        resetBtn.addEventListener('click', () => {
+            // 重置所有控制元素为默认值 (including text inputs)
+            elementType.value = 'div';
+            elementText.value = '';
+            elementWidth.value = '200';
+            elementHeight.value = '200';
+            elementColor.value = '#6c63ff'; elementColorText.value = '#6c63ff';
+            textColor.value = '#ffffff'; textColorText.value = '#ffffff';
+            borderRadius.value = '8';
+            textAlignH.value = 'center'; textAlignV.value = 'center'; // Reset alignment
+            
+            animationType.value = 'none';
+            animationDuration.value = '1.5';
+            animationDelay.value = '0';
+            animationIterations.value = '1';
+            timingFunction.value = 'ease';
+            
+            gradientEnable.value = 'no';
+            gradientOptions.style.display = 'none';
+            gradientType.value = 'linear';
+            gradientDirection.value = 'to right';
+            gradientColor1.value = '#6c63ff'; gradientColor1Text.value = '#6c63ff';
+            gradientColor2.value = '#ff6584'; gradientColor2Text.value = '#ff6584';
+            gradientStopSlider.value = '50'; gradientStopPercentage.textContent = '50%'; // Reset slider
+            linearGradientStopGroup.style.display = 'none'; // Hide initially
+            
+            shadowEnable.value = 'no';
+            shadowOptions.style.display = 'none';
+            shadowX.value = '5';
+            shadowY.value = '5';
+            shadowBlur.value = '10';
+            shadowColor.value = '#00000080'; shadowColorText.value = '#00000080';
+            
+            // Reset backdrop filter
+            backdropFilterEnable.value = 'no';
+            backdropFilterOptions.style.display = 'none';
+            backdropBlur.value = '5';
+            backdropBrightness.value = '100'; backdropBrightnessValue.textContent = '100%';
+            backdropSaturate.value = '100'; backdropSaturateValue.textContent = '100%';
+
+            // 重置交互效果
+            hoverEnable.value = 'no';
+            hoverOptions.style.display = 'none';
+            hoverBackground.value = '#ff6584'; hoverBackgroundText.value = '#ff6584';
+            hoverTextColor.value = '#ffffff'; hoverTextColorText.value = '#ffffff';
+            hoverTransform.value = 'none';
+            hoverShadowEnable.value = 'no';
+            hoverShadowOptions.style.display = 'none';
+            hoverShadowX.value = '8';
+            hoverShadowY.value = '8';
+            hoverShadowBlur.value = '15';
+            hoverShadowColor.value = '#00000099'; hoverShadowColorText.value = '#00000099';
+
+            transitionEnable.value = 'no';
+            transitionOptions.style.display = 'none';
+            transitionProperty.value = 'all';
+            transitionDuration.value = '0.3';
+            transitionTimingFunction.value = 'ease';
+
+            // 更新预览和代码
+            updatePreview();
+            cssCode.textContent = '/* 请先生成CSS代码喵～ */';
+        });
+        
+        // 复制按钮点击事件
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(cssCode.textContent).then(() => {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '已复制！';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            });
+        });
+        
+        // 控制元素变化时更新预览 (excluding color text inputs as they have their own sync)
+        const allInputs = document.querySelectorAll('input:not(.color-text-input), select');
+        allInputs.forEach(input => {
+            input.addEventListener('change', updatePreview);
+            input.addEventListener('input', (e) => { // Also listen to input for sliders/numbers
+                if (e.target.type === 'range' || e.target.type === 'number') {
+                    updatePreview();
+                }
+            });
+        });
+        
+        // 初始化预览
+        updatePreview();
+    });
+</script>
+
+<script src="script.js"></script>
+</body>
+</html> 

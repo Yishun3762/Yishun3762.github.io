@@ -149,12 +149,24 @@
                 <div class="stat-value" id="word-count">0</div>
             </div>
             <div class="stat-item">
+                <div class="stat-title">字数 (中文)</div>
+                <div class="stat-value" id="chinese-char-count">0</div>
+            </div>
+            <div class="stat-item">
                 <div class="stat-title">行数</div>
                 <div class="stat-value" id="line-count">0</div>
             </div>
             <div class="stat-item">
                 <div class="stat-title">段落数</div>
                 <div class="stat-value" id="paragraph-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-title">预计阅读时间</div>
+                <div class="stat-value" id="reading-time">0分钟</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-title">预计朗读时间</div>
+                <div class="stat-value" id="speaking-time">0分钟</div>
             </div>
         </div>
         
@@ -173,29 +185,83 @@
         const textInputArea = document.getElementById('text-input-area');
         const charCountDisplay = document.getElementById('char-count');
         const wordCountDisplay = document.getElementById('word-count');
+        const chineseCharCountDisplay = document.getElementById('chinese-char-count');
         const lineCountDisplay = document.getElementById('line-count');
         const paragraphCountDisplay = document.getElementById('paragraph-count');
+        const readingTimeDisplay = document.getElementById('reading-time');
+        const speakingTimeDisplay = document.getElementById('speaking-time');
         const clearBtn = document.getElementById('clear-btn');
 
-        // Function to update counts
+        // 平均阅读速度常量 (每分钟)
+        const READING_SPEED_CN = 300; // 中文字/分钟
+        const READING_SPEED_EN = 200; // 英文词/分钟
+        const SPEAKING_SPEED_CN = 200; // 中文字/分钟
+        const SPEAKING_SPEED_EN = 150; // 英文词/分钟
+
+        // 检测是否为中文字符
+        function isChineseChar(char) {
+            return /[\u4e00-\u9fa5]/.test(char);
+        }
+
+        // 检测是否为标点符号
+        function isPunctuation(char) {
+            return /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~。，、；：'"'""【】《》？！（）…—]/.test(char);
+        }
+
+        // 优化后的字数统计函数
         function updateCounts() {
             const text = textInputArea.value;
             
-            // Character count
+            // 字符数（含空格）
             charCountDisplay.textContent = text.length;
             
-            // Word count (simple space/newline split, filter empty)
-            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-            wordCountDisplay.textContent = text.trim() === '' ? 0 : words.length;
+            // 字符处理与计数
+            let chineseCharCount = 0;
+            for (let i = 0; i < text.length; i++) {
+                if (isChineseChar(text[i])) {
+                    chineseCharCount++;
+                }
+            }
+            chineseCharCountDisplay.textContent = chineseCharCount;
             
-            // Line count
+            // 英文单词计数（优化识别）
+            // 使用正则表达式匹配连续的英文字母、数字或缩写（带撇号）
+            const words = text.match(/[a-zA-Z0-9]+(?:[''][a-zA-Z]+)?/g) || [];
+            wordCountDisplay.textContent = words.length;
+            
+            // 行数计数
             const lines = text.split(/\r\n|\r|\n/);
-            // Count non-empty lines or just 1 if input is empty but technically has one line
             lineCountDisplay.textContent = text === '' ? 0 : lines.length; 
             
-             // Paragraph count (split by double newlines, filter empty)
-             const paragraphs = text.trim().split(/\r\n\r\n|\r\r|\n\n/).filter(p => p.trim().length > 0);
-             paragraphCountDisplay.textContent = text.trim() === '' ? 0 : paragraphs.length;
+            // 段落计数（优化识别多种换行符组合）
+            const paragraphs = text.trim().split(/\r\n\s*\r\n|\r\s*\r|\n\s*\n/).filter(p => p.trim().length > 0);
+            paragraphCountDisplay.textContent = text.trim() === '' ? 0 : paragraphs.length;
+            
+            // 计算预计阅读时间
+            const chineseReadingTime = chineseCharCount / READING_SPEED_CN;
+            const englishReadingTime = words.length / READING_SPEED_EN;
+            const totalReadingTime = chineseReadingTime + englishReadingTime;
+            
+            if (totalReadingTime < 1) {
+                readingTimeDisplay.textContent = Math.ceil(totalReadingTime * 60) + "秒";
+            } else {
+                const minutes = Math.floor(totalReadingTime);
+                const seconds = Math.ceil((totalReadingTime - minutes) * 60);
+                readingTimeDisplay.textContent = minutes + "分" + (seconds > 0 ? seconds + "秒" : "");
+            }
+            
+            // 计算预计朗读时间
+            const chineseSpeakingTime = chineseCharCount / SPEAKING_SPEED_CN;
+            const englishSpeakingTime = words.length / SPEAKING_SPEED_EN;
+            const totalSpeakingTime = chineseSpeakingTime + englishSpeakingTime;
+            
+            if (totalSpeakingTime < 1) {
+                speakingTimeDisplay.textContent = Math.ceil(totalSpeakingTime * 60) + "秒";
+            } else {
+                const minutes = Math.floor(totalSpeakingTime);
+                const seconds = Math.ceil((totalSpeakingTime - minutes) * 60);
+                speakingTimeDisplay.textContent = minutes + "分" + (seconds > 0 ? seconds + "秒" : "");
+            }
         }
 
         // Update counts on input
@@ -207,7 +273,7 @@
             updateCounts(); // Reset counts to 0
         });
 
-        // Initial count update in case there's prefilled text (unlikely here)
+        // Initial count update in case there's prefilled text
         updateCounts();
     });
 </script>

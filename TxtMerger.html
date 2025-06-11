@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TXT合并工具 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<style>
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px var(--shadow-color);
+        padding: 2rem;
+    }
+    
+    header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 20px;
+    }
+    
+    header h1 {
+        color: var(--primary-color);
+        margin-bottom: 10px;
+        font-size: 2rem;
+    }
+    
+    section {
+        margin-bottom: 30px;
+    }
+    
+    h2 {
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+        color: #444;
+        border-left: 4px solid var(--primary-color);
+        padding-left: 10px;
+    }
+    
+    .upload-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .upload-area {
+        width: 100%;
+        border: 2px dashed #e0e0e0;
+        border-radius: 8px;
+        padding: 40px 20px;
+        text-align: center;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        background-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .upload-area:hover, .upload-area.drag-over {
+        border-color: var(--primary-color);
+        background-color: var(--hover-color);
+    }
+    
+    .upload-icon {
+        margin-bottom: 15px;
+    }
+    
+    .upload-icon svg {
+        fill: var(--primary-color);
+    }
+    
+    .upload-area input[type="file"] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    .btn {
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px var(--shadow-color);
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px var(--shadow-color);
+    }
+    
+    .btn.primary {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+    }
+    
+    .btn.primary:hover {
+        background-color: #3a82e0;
+    }
+    
+    .btn:disabled {
+        background-color: #e0e0e0;
+        cursor: not-allowed;
+        color: #999;
+        box-shadow: none;
+        transform: none;
+    }
+    
+    .file-list {
+        list-style: none;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 0;
+    }
+    
+    .file-list:empty {
+        display: none;
+    }
+    
+    .file-list:empty + .hint {
+        display: none;
+    }
+    
+    .file-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+    
+    .file-item:last-child {
+        border-bottom: none;
+    }
+    
+    .file-item:hover {
+        background-color: var(--hover-color);
+    }
+    
+    .file-item .file-name {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .file-item .file-size {
+        margin-left: 10px;
+        font-size: 0.8rem;
+        color: #999;
+    }
+    
+    .file-item .remove-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #ff4d4d;
+        margin-left: 15px;
+        opacity: 0.7;
+        transition: all 0.3s ease;
+    }
+    
+    .file-item .remove-btn:hover {
+        opacity: 1;
+    }
+    
+    .file-item .drag-handle {
+        cursor: grab;
+        margin-right: 10px;
+        color: #999;
+    }
+    
+    .file-item.sortable-ghost {
+        opacity: 0.4;
+    }
+    
+    .hint {
+        font-size: 0.9rem;
+        color: #999;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    
+    .options-section .option {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .options-section .option label {
+        width: 180px;
+        flex-shrink: 0;
+        font-weight: 500;
+    }
+    
+    .options-section .option input[type="text"],
+    .options-section .option select {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .options-section .option input[type="text"]:focus,
+    .options-section .option select:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 5px var(--hover-color);
+    }
+    
+    .action-section {
+        text-align: center;
+        margin-top: 30px;
+    }
+    
+    .progress-container {
+        margin-top: 20px;
+        width: 100%;
+        height: 10px;
+        background-color: #e0e0e0;
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background-color: var(--primary-color);
+        width: 0;
+        transition: width 0.3s;
+    }
+    
+    .progress-container span {
+        display: block;
+        margin-top: 8px;
+        font-size: 0.9rem;
+        color: #999;
+    }
+    
+    .hidden {
+        display: none;
+    }
+    
+    footer {
+        text-align: center;
+        margin-top: 30px;
+        color: #999;
+        font-size: 0.9rem;
+    }
+    
+    .back-home {
+        display: inline-block;
+        margin-top: 2rem;
+        padding: 0.8rem 1.5rem;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px var(--shadow-color);
+    }
+
+    .back-home:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px var(--shadow-color);
+    }
+
+</style>
+<body>
+    <div class="cursor-follower"></div>
+
+    <div class="sidebar">
+        <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+        <div class="bio">
+            <h2>AsagiYuumoya</h2>
+            <p>人活着就是为了二次元！</p>
+        </div>
+
+        <ul class="nav">
+            <li><a href="index.html">主页</a></li>
+            <li><a href="https://github.com/Yishun3762">关于</a></li>
+            <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+            <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+            <li><a href="toolbox.html" class="active">工具箱</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <div class="container">
+            <header>
+                <h1>TXT文本合并工具</h1>
+                <p>上传多个TXT文件并将它们合并为一个文件</p>
+            </header>
+            
+            <main>
+                <section class="upload-section">
+                    <h2>文件上传</h2>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64">
+                                <path fill="none" d="M0 0h24v24H0z"/>
+                                <path d="M12 12.586l4.243-4.242 1.415 1.414L12 15.414l-5.657-5.656 1.414-1.414z"/>
+                                <path d="M12 3a9 9 0 0 1 9 9h-2a7 7 0 0 0-7-7 7 7 0 0 0-7 7H3a9 9 0 0 1 9-9z"/>
+                            </svg>
+                        </div>
+                        <p>点击或拖放TXT文件到此处</p>
+                        <input type="file" id="fileInput" accept=".txt" multiple>
+                    </div>
+                    <button id="addFilesBtn" class="btn">选择文件</button>
+                </section>
+
+                <section class="files-section">
+                    <h2>文件列表</h2>
+                    <p class="hint">拖动调整顺序（将按此顺序合并）</p>
+                    <ul id="fileList" class="file-list"></ul>
+                </section>
+
+                <section class="options-section">
+                    <h2>合并选项</h2>
+                    <div class="option">
+                        <label for="filenameInput">合并后的文件名：</label>
+                        <input type="text" id="filenameInput" placeholder="输入合并后的文件名（不含.txt）">
+                    </div>
+                    <div class="option">
+                        <label for="separatorInput">文件间分隔符：</label>
+                        <input type="text" id="separatorInput" value="\n\n---\n\n">
+                    </div>
+                     <div class="option">
+                        <label for="encodingSelect">选择编码：</label>
+                        <select id="encodingSelect">
+                            <option value="UTF-8" selected>UTF-8</option>
+                            <option value="GBK">GBK</option>
+                        </select>
+                    </div>
+                </section>
+
+                <section class="action-section">
+                    <button id="mergeBtn" class="btn primary" disabled>合并TXT</button>
+                    <div id="progressContainer" class="progress-container hidden">
+                        <div id="progressBar" class="progress-bar"></div>
+                        <span id="progressText">处理中...</span>
+                    </div>
+                </section>
+            </main>
+
+            <footer>
+                <p>在浏览器中运行，您的文件不会上传到任何服务器</p>
+            </footer>
+             <a href="toolbox.html" class="back-home">返回工具箱</a>
+        </div>
+    </div>
+
+    <!-- 加载必要的库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/text-encoding@0.7.0/lib/encoding.js"></script>
+    
+    <!-- 主脚本 -->
+    <script>
+// 全局变量
+let txtFiles = [];
+let sortable;
+let fileInputProcessing = false;
+
+// DOM元素
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const addFilesBtn = document.getElementById('addFilesBtn');
+const fileList = document.getElementById('fileList');
+const mergeBtn = document.getElementById('mergeBtn');
+const filenameInput = document.getElementById('filenameInput');
+const separatorInput = document.getElementById('separatorInput');
+const encodingSelect = document.getElementById('encodingSelect');
+const progressContainer = document.getElementById('progressContainer');
+const progressBar = document.getElementById('progressBar');
+const progressText = document.getElementById('progressText');
+
+// 初始化
+document.addEventListener('DOMContentLoaded', () => {
+    initDragAndDrop();
+    initFileInput();
+    initSortable();
+    initMergeButton();
+});
+
+// 初始化拖放功能
+function initDragAndDrop() {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+            uploadArea.classList.add('drag-over');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+            uploadArea.classList.remove('drag-over');
+        });
+    });
+
+    uploadArea.addEventListener('drop', handleDrop);
+}
+
+// 处理拖放文件
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    handleFiles(files);
+}
+
+// 初始化文件输入
+function initFileInput() {
+    fileInput.addEventListener('change', (e) => {
+        if (fileInputProcessing) return;
+        fileInputProcessing = true;
+        
+        try {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                handleFiles(files);
+            }
+        } catch (error) {
+            console.error('处理文件时出错:', error);
+        } finally {
+            setTimeout(() => {
+                fileInput.value = '';
+                fileInputProcessing = false;
+            }, 100);
+        }
+    });
+
+    addFilesBtn.addEventListener('click', () => {
+        if (!fileInputProcessing) {
+            fileInput.click();
+        }
+    });
+}
+
+// 初始化排序功能
+function initSortable() {
+    sortable = new Sortable(fileList, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: updateTxtFilesOrder
+    });
+}
+
+// 更新文件排序
+function updateTxtFilesOrder(evt) {
+    const oldIndex = evt.oldIndex;
+    const newIndex = evt.newIndex;
+    
+    if (oldIndex !== newIndex) {
+        const item = txtFiles.splice(oldIndex, 1)[0];
+        txtFiles.splice(newIndex, 0, item);
+    }
+}
+
+// 初始化合并按钮
+function initMergeButton() {
+    mergeBtn.addEventListener('click', startMerging);
+}
+
+// 处理文件上传
+function handleFiles(files) {
+    if (!files || files.length === 0) {
+        return;
+    }
+
+    const txtFilesArray = Array.from(files).filter(file => 
+        file.name.toLowerCase().endsWith('.txt')
+    );
+
+    if (txtFilesArray.length === 0) {
+        alert('请选择TXT文件！');
+        return;
+    }
+
+    let addedCount = 0;
+    txtFilesArray.forEach(file => {
+        const fileExists = txtFiles.some(existingFile => 
+            existingFile.name === file.name && existingFile.size === file.size
+        );
+        
+        if (!fileExists) {
+            txtFiles.push(file);
+            addFileToList(file);
+            addedCount++;
+        }
+    });
+
+    if (addedCount > 0) {
+        updateUI();
+    }
+}
+
+// 添加文件到列表
+function addFileToList(file) {
+    const li = document.createElement('li');
+    li.className = 'file-item';
+    li.dataset.filename = file.name;
+    
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.innerHTML = '⋮⋮';
+    
+    const name = document.createElement('span');
+    name.className = 'file-name';
+    name.textContent = file.name;
+    
+    const size = document.createElement('span');
+    size.className = 'file-size';
+    size.textContent = formatFileSize(file.size);
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-btn';
+    removeBtn.innerHTML = '×';
+    removeBtn.addEventListener('click', () => removeFile(file, li));
+    
+    li.appendChild(handle);
+    li.appendChild(name);
+    li.appendChild(size);
+    li.appendChild(removeBtn);
+    
+    fileList.appendChild(li);
+}
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 删除文件
+function removeFile(file, li) {
+    const index = txtFiles.findIndex(f => f.name === file.name && f.size === file.size);
+    if (index > -1) {
+        txtFiles.splice(index, 1);
+        li.remove();
+        updateUI();
+    }
+}
+
+// 更新界面状态
+function updateUI() {
+    mergeBtn.disabled = txtFiles.length < 2;
+    
+    if (txtFiles.length > 0 && !filenameInput.value) {
+        const firstFileName = txtFiles[0].name.replace('.txt', '');
+        filenameInput.value = `${firstFileName}_merged`;
+    }
+}
+
+// 开始合并处理
+async function startMerging() {
+    if (txtFiles.length < 2) {
+        alert('请至少选择两个TXT文件进行合并！');
+        return;
+    }
+
+    try {
+        progressContainer.classList.remove('hidden');
+        mergeBtn.disabled = true;
+        
+        const filename = filenameInput.value || 'merged_text';
+        const separator = separatorInput.value.replace(/\\n/g, '\n');
+        const encoding = encodingSelect.value;
+        
+        await mergeTxtFiles(txtFiles, { filename, separator, encoding });
+        
+        resetUI();
+        
+    } catch (error) {
+        console.error('合并过程中发生错误:', error);
+        alert('合并失败: ' + error.message);
+        progressContainer.classList.add('hidden');
+        mergeBtn.disabled = false;
+    }
+}
+
+// 重置UI
+function resetUI() {
+    progressContainer.classList.add('hidden');
+    mergeBtn.disabled = false;
+    updateProgress(0, '处理完成！');
+}
+
+// 更新进度条
+function updateProgress(percent, message) {
+    progressBar.style.width = `${percent}%`;
+    progressText.textContent = message || `处理中... ${percent}%`;
+}
+
+// 合并TXT文件
+async function mergeTxtFiles(files, options) {
+    updateProgress(5, '正在读取TXT文件...');
+    
+    let mergedContent = [];
+    const fileCount = files.length;
+
+    for (let i = 0; i < fileCount; i++) {
+        const file = files[i];
+        const percent = 5 + (i / fileCount * 90);
+        updateProgress(percent, `正在读取 ${file.name}...`);
+        
+        const content = await readFileAsText(file, options.encoding);
+        mergedContent.push(content);
+    }
+    
+    updateProgress(95, '正在生成合并文件...');
+    
+    const finalContent = mergedContent.join(options.separator);
+    
+    const blob = new Blob([finalContent], { type: 'text/plain;charset=' + options.encoding });
+    
+    saveAs(blob, `${options.filename}.txt`);
+    
+    updateProgress(100, '合并完成！');
+    
+    return true;
+}
+
+// 读取文件为文本
+function readFileAsText(file, encoding) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            if (encoding.toUpperCase() === 'UTF-8') {
+                 resolve(event.target.result);
+            } else {
+                 // 对于非UTF-8编码，需要使用解码库
+                 const decoder = new TextDecoder(encoding);
+                 const decodedText = decoder.decode(event.target.result);
+                 resolve(decodedText);
+            }
+        };
+        reader.onerror = (error) => {
+            reject(error);
+        };
+
+        if (encoding.toUpperCase() === 'UTF-8') {
+            reader.readAsText(file, encoding);
+        } else {
+            // 对于其他编码，先读取为ArrayBuffer
+            reader.readAsArrayBuffer(file);
+        }
+    });
+}
+
+    </script>
+</body>
+</html> 

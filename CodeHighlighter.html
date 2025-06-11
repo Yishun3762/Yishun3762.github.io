@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码高亮工具 - Asagi的工具箱</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<style>
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px var(--shadow-color);
+        padding: 2rem;
+    }
+    
+    header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 20px;
+    }
+    
+    header h1 {
+        color: var(--primary-color);
+        margin-bottom: 10px;
+        font-size: 2rem;
+    }
+    
+    section {
+        margin-bottom: 30px;
+    }
+    
+    h2 {
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+        color: #444;
+        border-left: 4px solid var(--primary-color);
+        padding-left: 10px;
+    }
+    
+    .code-input {
+        width: 100%;
+        height: 400px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        resize: vertical;
+        tab-size: 4;
+    }
+    
+    .code-input:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 5px var(--hover-color);
+    }
+    
+    .options-section .option {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .options-section .option label {
+        width: 180px;
+        flex-shrink: 0;
+        font-weight: 500;
+    }
+    
+    .options-section .option select,
+    .options-section .option input[type="checkbox"] {
+        flex-grow: 1;
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        max-width: 300px;
+    }
+    
+    .options-section .option select:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 5px var(--hover-color);
+    }
+    
+    .btn {
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px var(--shadow-color);
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px var(--shadow-color);
+    }
+    
+    .btn.primary {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+    }
+    
+    .btn.primary:hover {
+        background-color: #3a82e0;
+    }
+    
+    .action-section {
+        text-align: center;
+        margin-top: 30px;
+    }
+    
+    footer {
+        text-align: center;
+        margin-top: 30px;
+        color: #999;
+        font-size: 0.9rem;
+    }
+    
+    .back-home {
+        display: inline-block;
+        margin-top: 2rem;
+        padding: 0.8rem 1.5rem;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px var(--shadow-color);
+    }
+
+    .back-home:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px var(--shadow-color);
+    }
+</style>
+<body>
+    <div class="cursor-follower"></div>
+
+    <div class="sidebar">
+        <div class="profile-pic" style="background-image: url('pic/2.jpg')"></div>
+
+        <div class="bio">
+            <h2>AsagiYuumoya</h2>
+            <p>人活着就是为了二次元！</p>
+        </div>
+
+        <ul class="nav">
+            <li><a href="index.html">主页</a></li>
+            <li><a href="https://github.com/Yishun3762">关于</a></li>
+            <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">文章</a></li>
+            <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click">站主女装照</a></li>
+            <li><a href="toolbox.html" class="active">工具箱</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <div class="container">
+            <header>
+                <h1>代码高亮工具</h1>
+                <p>在新的页面中格式化并高亮显示代码</p>
+            </header>
+            
+            <main>
+                <section class="input-section">
+                    <h2>输入代码</h2>
+                    <textarea id="codeInput" class="code-input" placeholder="在这里粘贴您的代码..."></textarea>
+                </section>
+
+                <section class="options-section">
+                    <h2>高亮选项</h2>
+                    <div class="option">
+                        <label for="languageSelect">编程语言：</label>
+                        <select id="languageSelect">
+                            <option value="markup">HTML/XML</option>
+                            <option value="css">CSS</option>
+                            <option value="javascript" selected>JavaScript</option>
+                            <option value="typescript">TypeScript</option>
+                            <option value="python">Python</option>
+                            <option value="java">Java</option>
+                            <option value="c">C</option>
+                            <option value="cpp">C++</option>
+                            <option value="csharp">C#</option>
+                            <option value="php">PHP</option>
+                            <option value="ruby">Ruby</option>
+                            <option value="go">Go</option>
+                            <option value="rust">Rust</option>
+                            <option value="swift">Swift</option>
+                            <option value="kotlin">Kotlin</option>
+                            <option value="sql">SQL</option>
+                            <option value="bash">Bash/Shell</option>
+                            <option value="json">JSON</option>
+                            <option value="yaml">YAML</option>
+                            <option value="markdown">Markdown</option>
+                        </select>
+                    </div>
+                    <div class="option">
+                        <label for="themeSelect">主题风格：</label>
+                        <select id="themeSelect">
+                            <option value="prism">默认</option>
+                            <option value="prism-okaidia" selected>暗色 (Okaidia)</option>
+                            <option value="prism-solarizedlight">阳光 (Solarized Light)</option>
+                            <option value="prism-tomorrow">明日 (Tomorrow)</option>
+                            <option value="prism-twilight">暮色 (Twilight)</option>
+                            <option value="prism-coy">纯净 (Coy)</option>
+                            <option value="prism-dark">深夜 (Dark)</option>
+                        </select>
+                    </div>
+                    <div class="option">
+                        <label for="showLineNumbers">显示行号：</label>
+                        <input type="checkbox" id="showLineNumbers" checked style="width: auto; flex-grow: 0;">
+                    </div>
+                </section>
+
+                <section class="action-section">
+                    <button id="highlightBtn" class="btn primary">在新页面中高亮</button>
+                </section>
+            </main>
+
+            <footer>
+                <p>基于 Prism.js 实现，支持多种编程语言和主题</p>
+            </footer>
+            <a href="toolbox.html" class="back-home">返回工具箱</a>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const highlightBtn = document.getElementById('highlightBtn');
+        
+        highlightBtn.addEventListener('click', () => {
+            const code = document.getElementById('codeInput').value;
+            const language = document.getElementById('languageSelect').value;
+            const theme = document.getElementById('themeSelect').value;
+            const showLineNumbers = document.getElementById('showLineNumbers').checked;
+
+            if (!code.trim()) {
+                alert('请输入代码！');
+                return;
+            }
+
+            // 使用 localStorage 传递数据
+            localStorage.setItem('highlightData', JSON.stringify({
+                code,
+                language,
+                theme,
+                showLineNumbers
+            }));
+
+            // 在新标签页中打开结果页面
+            window.open('HighlightResult.html', '_blank');
+        });
+    });
+    </script>
+</body>
+</html> 

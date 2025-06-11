@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>代码高亮结果</title>
+    <!-- Prism.js Base CSS -->
+    <link id="prismBaseThemeLink" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <!-- Other Prism plugins CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+        }
+        pre[class*="language-"] {
+            margin: 0;
+            height: 100vh;
+            box-sizing: border-box;
+            white-space: pre; /* Use 'pre' to prevent wrapping and ensure line number alignment */
+            overflow: auto; /* Add scrollbars for overflowing content */
+        }
+        /* Toolbar adjustments */
+        div.code-toolbar > .toolbar {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        div.code-toolbar:hover > .toolbar {
+            opacity: 1;
+        }
+        div.code-toolbar > .toolbar a,
+        div.code-toolbar > .toolbar button {
+            padding: 5px 10px;
+            background: #5c99d6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        div.code-toolbar > .toolbar a:hover,
+        div.code-toolbar > .toolbar button:hover {
+            background-color: #4a8ac9;
+        }
+    </style>
+</head>
+<body>
+    <pre><code id="codeOutput"></code></pre>
+
+    <!-- Prism.js Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <!-- Prism plugins -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const themes = {
+            'prism': 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css',
+            'prism-okaidia': 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css',
+            'prism-solarizedlight': 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-solarizedlight.min.css',
+            'prism-tomorrow': 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css',
+            'prism-twilight': 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-twilight.min.css',
+            'prism-coy': 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-coy.min.css',
+            'prism-dark': 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-dark.min.css'
+        };
+
+        function loadTheme(theme) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = themes[theme] || themes['prism'];
+            document.head.appendChild(link);
+
+            if (theme !== 'prism') {
+                document.getElementById('prismBaseThemeLink').disabled = true;
+            }
+        }
+
+        async function copyFormatted(element, themeKey, themeUrl) {
+            const button = document.querySelector('.toolbar-item button[data-copy-formatted]');
+            if (!button) return;
+
+            button.textContent = '正在复制...';
+            button.disabled = true;
+
+            try {
+                const response = await fetch(themeUrl);
+                if (!response.ok) throw new Error(`无法加载主题CSS: ${response.statusText}`);
+                const css = await response.text();
+                
+                const elementToCopy = element.cloneNode(true);
+
+                // For Coy theme, its background is on the body, so we manually apply it to the <pre> tag for copying
+                if (themeKey === 'prism-coy') {
+                    elementToCopy.style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.06) 50%, transparent 50%)';
+                    elementToCopy.style.backgroundSize = '3em 3em';
+                    elementToCopy.style.backgroundOrigin = 'content-box';
+                }
+
+                const htmlToCopy = `<style>${css}</style>${elementToCopy.outerHTML}`;
+                const blob = new Blob([htmlToCopy], { type: 'text/html' });
+                const clipboardItem = new ClipboardItem({ [blob.type]: blob });
+                
+                await navigator.clipboard.write([clipboardItem]);
+
+                button.textContent = '复制成功!';
+            } catch (err) {
+                console.error('复制带格式代码失败:', err);
+                button.textContent = '复制失败';
+            } finally {
+                setTimeout(() => {
+                    button.textContent = '复制带格式的';
+                    button.disabled = false;
+                }, 2000);
+            }
+        }
+
+        const dataString = localStorage.getItem('highlightData');
+        if (dataString) {
+            try {
+                const data = JSON.parse(dataString);
+                
+                Prism.plugins.toolbar.registerButton('copy-formatted', {
+                    text: '复制带格式的',
+                    onClick: function (env) {
+                        copyFormatted(env.element, data.theme, themes[data.theme]);
+                    },
+                    attributes: {
+                        'data-copy-formatted': 'true'
+                    }
+                });
+
+                const codeOutput = document.getElementById('codeOutput');
+                const preElement = codeOutput.parentElement;
+
+                codeOutput.textContent = data.code;
+                preElement.classList.add(`language-${data.language}`);
+                
+                if (data.showLineNumbers) {
+                    preElement.classList.add('line-numbers');
+                }
+
+                loadTheme(data.theme);
+                Prism.highlightElement(codeOutput);
+
+            } catch (e) {
+                console.error("处理高亮数据时出错:", e);
+                document.getElementById('codeOutput').textContent = '加载代码时出错。数据可能已损坏。';
+            }
+        } else {
+            document.getElementById('codeOutput').textContent = '未找到要高亮的代码。请返回工具页重新生成。';
+        }
+    });
+    </script>
+</body>
+</html> 
